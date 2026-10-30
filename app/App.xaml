@@ -1,0 +1,62 @@
+<Application x:Class="Stm32Atlas.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <!-- 标题栏配色：默认亮色；网页切换深色主题时由 MainWindow 整体替换这组画刷 -->
+        <SolidColorBrush x:Key="ShellBg" Color="#F3F6FB" />
+        <SolidColorBrush x:Key="ShellLine" Color="#DCE5F1" />
+        <SolidColorBrush x:Key="TitleBarBg" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="TitleBarText" Color="#0E1726" />
+        <SolidColorBrush x:Key="TitleBadgeBg" Color="#EDF3FB" />
+        <SolidColorBrush x:Key="TitleBadgeLine" Color="#DCE5F1" />
+        <SolidColorBrush x:Key="TitleBadgeText" Color="#4E6079" />
+        <SolidColorBrush x:Key="TitleIconBrush" Color="#475569" />
+        <SolidColorBrush x:Key="TitleLogoBrush" Color="#16A34A" />
+        <SolidColorBrush x:Key="WinHoverBg" Color="#EDF3FB" />
+        <SolidColorBrush x:Key="WinHoverText" Color="#0E1726" />
+
+        <Style x:Key="WinButton" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TitleIconBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="{DynamicResource WinHoverBg}" />
+                                <Setter Property="Foreground" Value="{DynamicResource WinHoverText}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource WinButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bg" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bg" Property="Background" Value="#DC2626" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Application.Resources>
+</Application>

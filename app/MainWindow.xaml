@@ -1,0 +1,88 @@
+<Window x:Class="Stm32Atlas.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="STM32 库字典 · Library Atlas"
+        Height="880" Width="1440" MinHeight="560" MinWidth="900"
+        WindowStartupLocation="Manual"
+        WindowStyle="None" AllowsTransparency="False"
+        Background="{DynamicResource ShellBg}" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Border x:Name="ShellBorder" CornerRadius="10"
+            BorderBrush="{DynamicResource ShellLine}" BorderThickness="1"
+            Background="{DynamicResource ShellBg}">
+        <Grid ClipToBounds="True">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="{DynamicResource TitleBarBg}"
+                    BorderBrush="{DynamicResource ShellLine}" BorderThickness="0,0,0,1">
+                <Grid x:Name="TitleBar" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                        <Grid Width="20" Height="20">
+                            <Border CornerRadius="6" Background="{DynamicResource TitleLogoBrush}" Opacity="0.14" />
+                            <Path Data="M7,7 H13 V13 H7 Z" Stroke="{DynamicResource TitleLogoBrush}" StrokeThickness="1.4"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Data="M9,3.5 V7 M11,3.5 V7 M9,13 V16.5 M11,13 V16.5 M3.5,9 H7 M3.5,11 H7 M13,9 H16.5 M13,11 H16.5"
+                                  Stroke="{DynamicResource TitleLogoBrush}" StrokeThickness="1.3"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <TextBlock Text="STM32 库字典" Foreground="{DynamicResource TitleBarText}" FontSize="13" FontWeight="SemiBold"
+                                   Margin="10,0,0,0" VerticalAlignment="Center" />
+                        <Border Background="{DynamicResource TitleBadgeBg}" BorderBrush="{DynamicResource TitleBadgeLine}" BorderThickness="1"
+                                CornerRadius="4" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="LIBRARY ATLAS" Foreground="{DynamicResource TitleBadgeText}" FontSize="9" FontWeight="SemiBold" />
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <Button x:Name="MiniButton" Style="{StaticResource WinButton}" Click="Mini_Click" ToolTip="迷你模式">
+                            <Path Data="M 0,0 H 9 V 9 H 0 Z M 11,3 H 14 V 14 H 3 V 11" Stroke="{DynamicResource TitleIconBrush}"
+                                  StrokeThickness="1.2" StrokeLineJoin="Round" />
+                        </Button>
+                        <Button Style="{StaticResource WinButton}" Click="Minimize_Click" ToolTip="最小化">
+                            <Path Data="M 0,5 H 12" Stroke="{DynamicResource TitleIconBrush}" StrokeThickness="1.4"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        </Button>
+                        <Button Style="{StaticResource WinButton}" Click="Maximize_Click" ToolTip="最大化">
+                            <Path x:Name="MaxIcon" Data="M 0,0 H 11 V 11 H 0 Z" Stroke="{DynamicResource TitleIconBrush}" StrokeThickness="1.2" />
+                        </Button>
+                        <Button Style="{StaticResource CloseButton}" Click="Close_Click" ToolTip="关闭">
+                            <Path Data="M 0,0 L 11,11 M 11,0 L 0,11" Stroke="{DynamicResource TitleIconBrush}" StrokeThickness="1.4"
+                                  StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" Background="{DynamicResource ShellBg}">
+                <wv2:WebView2 x:Name="Web" DefaultBackgroundColor="#F3F6FB" />
+                <Border x:Name="Fallback" Visibility="Collapsed" Background="{DynamicResource ShellBg}">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="560">
+                        <TextBlock Text="无法启动界面引擎" Foreground="{DynamicResource TitleBarText}" FontSize="22" FontWeight="SemiBold" />
+                        <TextBlock x:Name="FallbackText" Foreground="{DynamicResource TitleBadgeText}" Margin="0,12,0,0"
+                                   TextWrapping="Wrap" FontSize="13" LineHeight="22" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

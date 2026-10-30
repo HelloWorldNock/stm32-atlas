@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; connect-src 'self'">
+<title>STM32 库字典 · Library Atlas</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#mainView">跳到主要内容 / Skip to content</a>
+
+<div class="app" id="app">
+  <aside class="sidebar" id="sidebar" aria-label="侧边导航"></aside>
+
+  <div class="workspace">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="菜单" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+
+      <div class="crumb" id="crumb"></div>
+
+      <div class="searchbox" id="searchWrap">
+        <span class="searchbox__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.4 16.4 4.1 4.1"/></svg>
+        </span>
+        <input id="search" type="search" autocomplete="off" spellcheck="false"
+               placeholder="搜索函数、外设或任务" aria-label="搜索函数、外设或任务">
+        <kbd id="searchKbd">Ctrl K</kbd>
+        <button class="searchbox__clear" id="searchClear" type="button" aria-label="清空搜索" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="topbar__actions">
+        <div class="seg" id="langSeg" role="group" aria-label="语言 / Language">
+          <button type="button" data-lang="zh" class="active">中</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="切换主题">
+          <span id="themeIcon"></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="view" id="mainView" tabindex="-1">
+      <div class="view__inner" id="view"></div>
+    </main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+export const STR = {
+  "app.title": { zh: "STM32 库字典", en: "STM32 Library Atlas" },
+  "app.tagline": { zh: "标准库 · HAL · 函数关系与操作流程", en: "SPL · HAL · call graph and task flows" },
+
+  "nav.explore": { zh: "浏览", en: "Explore" },
+  "nav.overview": { zh: "概览", en: "Overview" },
+  "nav.functions": { zh: "函数字典", en: "Functions" },
+  "nav.workflows": { zh: "任务流程", en: "Workflows" },
+  "nav.map": { zh: "库对照", en: "SPL ↔ HAL" },
+  "nav.favorites": { zh: "收藏", en: "Favorites" },
+  "nav.kb": { zh: "硬件知识", en: "Hardware KB" },
+  "nav.cases": { zh: "经典案例", en: "Case studies" },
+  "nav.peripherals": { zh: "外设", en: "Peripherals" },
+  "nav.peripheralsHint": { zh: "按外设筛选函数", en: "Filter functions by peripheral" },
+
+  "top.searchPlaceholder": { zh: "搜索函数、外设或任务，例如“PWM 占空比”", en: "Search functions, peripherals or tasks, e.g. “PWM duty”" },
+  "top.search": { zh: "搜索", en: "Search" },
+  "top.shortcut": { zh: "快捷键", en: "Shortcuts" },
+  "top.lang": { zh: "语言", en: "Language" },
+  "top.theme": { zh: "切换主题", en: "Toggle theme" },
+
+  "common.back": { zh: "返回", en: "Back" },
+  "common.copy": { zh: "复制", en: "Copy" },
+  "common.copied": { zh: "已复制到剪贴板", en: "Copied to clipboard" },
+  "common.copyFail": { zh: "复制失败，请手动选择", en: "Copy failed, select manually" },
+  "common.all": { zh: "全部", en: "All" },
+  "common.std": { zh: "标准库", en: "SPL" },
+  "common.hal": { zh: "HAL", en: "HAL" },
+  "common.stdFull": { zh: "标准外设库 SPL", en: "Standard Peripheral Library" },
+  "common.halFull": { zh: "HAL 硬件抽象层", en: "Hardware Abstraction Layer" },
+  "common.functions": { zh: "个函数", en: "functions" },
+  "common.workflows": { zh: "个流程", en: "workflows" },
+  "common.steps": { zh: "步", en: "steps" },
+  "common.close": { zh: "关闭", en: "Close" },
+  "common.viewAll": { zh: "查看全部", en: "View all" },
+  "common.function": { zh: "函数", en: "Function" },
+  "common.workflow": { zh: "流程", en: "Workflow" },
+  "common.peripheral": { zh: "外设", en: "Peripheral" },
+  "common.macro": { zh: "宏", en: "Macro" },
+  "common.group": { zh: "组合调用", en: "Call sequence" },
+  "common.empty": { zh: "没有内容", en: "Nothing here" },
+  "common.favorite": { zh: "收藏", en: "Favorite" },
+  "common.unfavorite": { zh: "取消收藏", en: "Remove favorite" },
+  "common.notFound": { zh: "找不到这个条目", en: "Entry not found" },
+
+  "home.eyebrow": { zh: "STM32 开发者速查台", en: "STM32 developer reference" },
+  "home.title": { zh: "把需求，翻译成正确的函数调用", en: "Turn a requirement into the right API call" },
+  "home.lead": {
+    zh: "标准库与 HAL 的 150+ 常用函数、18 条实操流程、函数级互链。先按任务看步骤和流程图，再落到具体寄存器配置。",
+    en: "150+ SPL and HAL calls, 18 worked flows and function-level cross-links. Start from the task, follow the flow, then land on the exact call."
+  },
+  "home.ctaFunctions": { zh: "浏览函数字典", en: "Browse functions" },
+  "home.ctaWorkflows": { zh: "按任务找流程", en: "Find a workflow" },
+  "home.statsFunctions": { zh: "函数条目", en: "Function entries" },
+  "home.statsWorkflows": { zh: "实操流程", en: "Worked flows" },
+  "home.statsPeripherals": { zh: "外设分类", en: "Peripheral groups" },
+  "home.statsPairs": { zh: "标准库 / HAL 对照", en: "SPL / HAL pairs" },
+  "home.quickTitle": { zh: "三种入口，按你的习惯来", en: "Three ways in" },
+  "home.quickLead": { zh: "同一个知识库，三种检索路径互相打通。", en: "One knowledge base, three linked entry points." },
+  "home.quick1Title": { zh: "按外设查函数", en: "Browse by peripheral" },
+  "home.quick1Desc": { zh: "GPIO、定时器、串口……直接看该外设的全部 API 与对应关系。", en: "GPIO, timers, UART… jump straight to every API for a peripheral and its counterpart." },
+  "home.quick2Title": { zh: "按任务看流程", en: "Follow a task flow" },
+  "home.quick2Desc": { zh: "从“点亮 LED”到“ADC + DMA 采样”，每步都标出要调的函数和流程图。", en: "From “blink an LED” to “ADC + DMA sampling”: each step names the call and draws the flow." },
+  "home.quick3Title": { zh: "标准库 ↔ HAL 对照", en: "SPL ↔ HAL comparison" },
+  "home.quick3Desc": { zh: "迁移代码时按功能点逐行替换，不用在两个头文件之间来回猜。", en: "Port code feature by feature instead of guessing between two header sets." },
+  "home.popularFlows": { zh: "常用流程", en: "Popular workflows" },
+  "home.popularFlowsLead": { zh: "从最常被问到的场景开始。", en: "Start with the scenarios people ask about most." },
+  "home.periphTitle": { zh: "外设索引", en: "Peripheral index" },
+  "home.periphLead": { zh: "每个外设下都列出了函数数量与对应流程。", en: "Each group shows its function count and related workflows." },
+  "home.recent": { zh: "最近浏览", en: "Recently viewed" },
+  "home.recentEmpty": { zh: "还没有浏览记录，先从上面的入口开始。", en: "Nothing viewed yet — pick an entry point above." },
+
+  "fn.title": { zh: "函数字典", en: "Function dictionary" },
+  "fn.lead": {
+    zh: "按外设、库类型或关键字筛选。条目之间通过“对应函数 / 相关函数 / 所属流程”互相跳转。",
+    en: "Filter by peripheral, library or keyword. Entries link to counterparts, related calls and the flows that use them."
+  },
+  "fn.filterLib": { zh: "库类型", en: "Library" },
+  "fn.filterPeriph": { zh: "外设", en: "Peripheral" },
+  "fn.count": { zh: "共 {n} 个函数", en: "{n} functions" },
+  "fn.empty": { zh: "当前筛选下没有函数", en: "No functions match these filters" },
+  "fn.emptyHint": { zh: "试试切换库类型，或在顶部搜索框里搜功能描述。", en: "Try another library filter, or search by what you want to do." },
+  "fn.what": { zh: "作用", en: "What it does" },
+  "fn.params": { zh: "参数", en: "Parameters" },
+  "fn.returns": { zh: "返回值", en: "Returns" },
+  "fn.header": { zh: "头文件", en: "Header" },
+  "fn.type": { zh: "类型", en: "Kind" },
+  "fn.signature": { zh: "函数原型", en: "Signature" },
+  "fn.equiv": { zh: "对应函数", en: "Counterpart" },
+  "fn.equivNone": { zh: "另一套库中没有直接对应项，通常需要组合多个调用。", en: "No direct counterpart in the other library — usually requires several calls." },
+  "fn.related": { zh: "相关函数", en: "Related calls" },
+  "fn.usedIn": { zh: "出现在这些流程", en: "Used in these workflows" },
+  "fn.usedInNone": { zh: "还没有流程收录这个函数。", en: "No workflow references this call yet." },
+  "fn.tags": { zh: "检索标签", en: "Search tags" },
+  "fn.translation": { zh: "English", en: "中文" },
+  "fn.headerNote": { zh: "F4 系列把 stm32f10x_ 换成 stm32f4xx_；HAL 同理把 f1xx 换成 f4xx。", en: "For F4 parts replace stm32f10x_ with stm32f4xx_; in HAL replace f1xx with f4xx." },
+
+  "wf.title": { zh: "任务流程", en: "Task workflows" },
+  "wf.lead": {
+    zh: "每个流程给出目标、分步操作、流程图和可复制的标准库 / HAL 代码。",
+    en: "Each workflow gives a goal, ordered steps, a flow chart and copyable SPL / HAL code."
+  },
+  "wf.count": { zh: "共 {n} 个流程", en: "{n} workflows" },
+  "wf.goal": { zh: "目标", en: "Goal" },
+  "wf.level": { zh: "难度", en: "Level" },
+  "level.1": { zh: "入门", en: "Intro" },
+  "level.2": { zh: "进阶", en: "Intermediate" },
+  "level.3": { zh: "综合", en: "Advanced" },
+  "wf.flow": { zh: "流程图", en: "Flow" },
+  "wf.stepsTab": { zh: "分步说明", en: "Steps" },
+  "wf.codeTab": { zh: "完整代码", en: "Code" },
+  "wf.notesTab": { zh: "要点与关联", en: "Notes & links" },
+  "wf.flowHint": { zh: "滚轮上下滚动 · Ctrl + 滚轮缩放 · 拖拽平移 · 点击函数查看详情", en: "Scroll to pan · Ctrl+scroll to zoom · drag to pan · click a call for details" },
+  "wf.fit": { zh: "适应窗口", en: "Fit view" },
+  "wf.zoomIn": { zh: "放大", en: "Zoom in" },
+  "wf.zoomOut": { zh: "缩小", en: "Zoom out" },
+  "wf.pitfalls": { zh: "容易踩的坑", en: "Common pitfalls" },
+  "wf.related": { zh: "相关流程", en: "Related workflows" },
+  "wf.funcUsed": { zh: "本流程用到的函数", en: "Calls used in this flow" },
+  "wf.step": { zh: "第 {n} 步", en: "Step {n}" },
+  "wf.snippet": { zh: "关键代码", en: "Key snippet" },
+  "wf.copyAll": { zh: "复制完整代码", en: "Copy full code" },
+  "wf.notesEmpty": { zh: "暂无额外说明。", en: "No extra notes." },
+  "wf.totalSteps": { zh: "{n} 步", en: "{n} steps" },
+  "wf.start": { zh: "开始", en: "Start" },
+  "wf.end": { zh: "完成", en: "Done" },
+  "wf.isr": { zh: "中断 / 回调", en: "ISR / callback" },
+  "wf.check": { zh: "检查 / 等待", en: "Check / wait" },
+  "wf.stepKind": { zh: "步骤类型", en: "Step kind" },
+
+  "map.title": { zh: "标准库 ↔ HAL 对照", en: "SPL ↔ HAL map" },
+  "map.lead": {
+    zh: "按功能点并排查看两套库的等价调用。迁移时先对照语义，再检查参数与返回值差异。",
+    en: "Compare equivalent calls side by side. Match the semantics first, then check parameter and return differences."
+  },
+  "map.feature": { zh: "功能点", en: "Capability" },
+  "map.std": { zh: "标准库 SPL", en: "Standard library" },
+  "map.hal": { zh: "HAL", en: "HAL" },
+  "map.empty": { zh: "该外设没有登记对照项", en: "No pairs recorded for this peripheral" },
+  "map.hint": { zh: "两边都可点击，直接跳到函数详情。", en: "Both sides are clickable and open the function detail." },
+  "map.filter": { zh: "按外设筛选对照", en: "Filter pairs by peripheral" },
+
+  "fav.title": { zh: "收藏", en: "Favorites" },
+  "fav.lead": { zh: "常用的函数与流程集中在这里，数据保存在本机。", en: "Pinned calls and flows, stored locally on this machine." },
+  "fav.empty": { zh: "还没有收藏", en: "No favorites yet" },
+  "fav.emptyHint": { zh: "在函数或流程页面点右上角的星标即可加入。", en: "Use the star button on any function or workflow page." },
+
+  "search.title": { zh: "搜索结果", en: "Search results" },
+  "search.for": { zh: "“{q}” 的结果", en: "Results for “{q}”" },
+  "search.functions": { zh: "函数", en: "Functions" },
+  "search.workflows": { zh: "流程", en: "Workflows" },
+  "search.peripherals": { zh: "外设", en: "Peripherals" },
+  "search.empty": { zh: "没有找到“{q}”", en: "Nothing found for “{q}”" },
+  "search.emptyHint": {
+    zh: "换个说法试试：功能描述（“串口 中断”）、函数名（HAL_UART）或外设缩写（TIM）。",
+    en: "Try a description (“uart interrupt”), a function name (HAL_UART) or a peripheral code (TIM)."
+  },
+  "search.suggestions": { zh: "试试这些", en: "Try these" },
+  "search.hintNav": { zh: "↑↓ 选择", en: "↑↓ to move" },
+  "search.hintOpen": { zh: "Enter 打开", en: "Enter to open" },
+  "search.hintClose": { zh: "Esc 清空", en: "Esc to clear" },
+
+  "sidebar.reference": { zh: "参考版本", en: "Reference" },
+  "sidebar.referenceNote": { zh: "SPL 以 F1 为例，HAL 兼容 F1/F4。", en: "SPL samples use F1; HAL covers F1/F4." },
+  "sidebar.data": { zh: "{f} 函数 · {w} 流程", en: "{f} functions · {w} flows" },
+  "sidebar.shortcuts": { zh: "Ctrl K 搜索 · Esc 返回", en: "Ctrl K search · Esc back" },
+
+  /* ---- 硬件知识库 ---- */
+  "kb.title": { zh: "硬件知识库", en: "Hardware knowledge base" },
+  "kb.lead": {
+    zh: "把 STM32F103C8T6 的电气事实整理成可查的短文章：芯片资源、引脚复用、GPIO 模式、LED 与三极管、定时器与 PWM、ADC、串口。每篇都标了教程页码。",
+    en: "Short reference articles on the STM32F103C8T6: silicon resources, pin muxing, GPIO modes, LEDs and BJTs, timers and PWM, ADC, UART."
+  },
+  "kb.read": { zh: "阅读", en: "Read" },
+  "kb.refs": { zh: "教程出处", en: "Source slides" },
+  "kb.ref": { zh: "第 {n} 页 · {title}", en: "Slide {n} · {title}" },
+  "kb.sourceNote": { zh: "原文见仓库根目录的 STM32入门教程.md。", en: "Source: STM32入门教程.md in the repository root." },
+  "kb.relatedLabs": { zh: "相关实验", en: "Related labs" },
+  "kb.relatedFlows": { zh: "相关流程", en: "Related workflows" },
+  "kb.relatedFns": { zh: "相关函数", en: "Related calls" },
+  "kb.back": { zh: "全部知识点", en: "All articles" },
+  "kb.empty": { zh: "还没有知识条目", en: "No articles yet" },
+  "kb.count": { zh: "篇文章", en: "articles" },
+  "kb.chip": { zh: "STM32F103C8T6 · Cortex-M3 · 72 MHz · 3.3 V · LQFP48", en: "STM32F103C8T6 · Cortex-M3 · 72 MHz · 3.3 V · LQFP48" },
+
+  /* ---- 首页 / 搜索 ---- */
+  "search.kb": { zh: "知识点", en: "Knowledge" },
+
+  "a11y.skip": { zh: "跳到主要内容", en: "Skip to content" },
+  "a11y.main": { zh: "主要内容", en: "Main content" },
+  "toast.favAdded": { zh: "已加入收藏", en: "Added to favorites" },
+  "toast.favRemoved": { zh: "已取消收藏", en: "Removed from favorites" },
+  "meta.steps": { zh: "{n} 个步骤", en: "{n} steps" },
+  "meta.calls": { zh: "{n} 个函数", en: "{n} calls" },
+
+  "cases.eyebrow": { zh: "江协教程 · 按顺序", en: "Tutorial cases, in order" },
+  "cases.title": { zh: "经典案例", en: "Case studies" },
+  "cases.goal": {
+    zh: "江协科技《STM32 入门教程》里的经典案例，按教程顺序排好：每条都有可点的模拟电路、实时读数、教程原版 SPL 源码、逐条原理与自检判据。",
+    en: "Classic examples from the STM32 tutorial series, in teaching order: each one has a clickable simulated circuit, live readouts, the original SPL source, step-by-step reasoning and a self-check."
+  },
+  "nav.chip": { zh: "引脚图", en: "Pinout" },
+  "chip.eyebrow": { zh: "STM32F103C8T6 · LQFP48", en: "STM32F103C8T6 · LQFP48" },
+  "chip.title": { zh: "引脚定义", en: "Pin definitions" },
+  "chip.goal": {
+    zh: "48 个引脚的真实定义：类型、是否 5V 容忍、默认复用功能与重定义功能、涉及的外设，以及哪些案例正在用这个引脚。点芯片上的引脚即可查看。",
+    en: "The real definition of all 48 pins — type, 5 V tolerance, default and remapped alternate functions, related peripherals, and which cases use the pin. Click a pin on the chip to inspect it."
+  }
+};
+
+export function makeT(lang) {
+  return (key, vars) => {
+    const entry = STR[key];
+    let text = entry ? entry[lang] || entry.zh : key;
+    if (vars) for (const [k, v] of Object.entries(vars)) text = text.replaceAll(`{${k}}`, v);
+    return text;
+  };
+}

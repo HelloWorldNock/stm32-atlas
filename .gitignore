@@ -1,0 +1,18 @@
+# 构建产物
+app/bin/
+app/obj/
+dist/
+*.user
+*.suo
+.vs/
+
+# 临时文件
+.tmp/
+*.tmp
+Thumbs.db
+desktop.ini
+
+# 原始素材（体积大，且为教程原始资料，不入库）
+STM32入门教程.pptx
+STM32入门教程.assets/
+md/
