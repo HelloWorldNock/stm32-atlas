@@ -3,7 +3,8 @@
 """从江协教程附带的《STM32F103C8T6引脚定义.xlsx》生成 app/ui/data/pins.js。
 
 只依赖标准库（zipfile + xml.etree），因为 xlsx 本质是个 zip。
-运行：python tools/gen-pins.py
+运行：python tools/gen-pins.py <STM32F103C8T6引脚定义.xlsx 路径>
+原始 xlsx 不入库，所以必须自己指定路径（也可以用环境变量 STM32_PIN_XLSX）。
 """
 import json
 import os
@@ -14,7 +15,9 @@ from xml.etree import ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-SRC = r"<采集源>\参考文档\STM32F103C8T6引脚定义.xlsx"
+SRC = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("STM32_PIN_XLSX", "")
+if not SRC:
+    sys.exit("用法：python tools/gen-pins.py <STM32F103C8T6引脚定义.xlsx>（或设置 STM32_PIN_XLSX）")
 OUT = os.path.join(ROOT, "app", "ui", "data", "pins.js")
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"

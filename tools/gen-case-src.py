@@ -5,17 +5,23 @@
 「源码」面板展示。生成物是纯数据，不需要在运行期读文件。
 
 用法：
-    python tools/gen-case-src.py            # 生成
-    python tools/gen-case-src.py --dump     # 打印案例 main.c（调试用）
+    python tools/gen-case-src.py <STM32Project-有注释版 目录>   # 生成
+    python tools/gen-case-src.py --dump                        # 打印案例 main.c（调试用）
+教程源码不入库，目录用位置参数或环境变量 STM32_CASE_SRC 指定。
 """
 
 import json
+import os
 import pathlib
 import sys
 
 ROOT = pathlib.Path(
-    r"<采集源>\程序源码\STM32Project-有注释版"
+    os.environ.get("STM32_CASE_SRC", "")
+    if (len(sys.argv) > 1 and sys.argv[1].startswith("--")) or len(sys.argv) <= 1
+    else sys.argv[1]
 )
+if str(ROOT) in ("", "."):
+    sys.exit("用法：python tools/gen-case-src.py <STM32Project-有注释版 目录>（或设置 STM32_CASE_SRC）")
 OUT = pathlib.Path(__file__).resolve().parent.parent / "app" / "ui" / "data" / "case-src.js"
 
 # 案例 id → (教程工程目录, 需要展示的文件)
