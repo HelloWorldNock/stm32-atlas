@@ -18,7 +18,7 @@
 
 ## 直接运行
 
-双击 `dist\STM32Atlas.exe`。这是自包含的单文件程序，不需要安装 .NET。
+从 [Releases](https://github.com/HelloWorldNock/stm32-atlas/releases/latest) 下载 `STM32Atlas.exe` 后双击运行（也可以在本地用 `build.ps1` 自己产出 `dist\STM32Atlas.exe`）。这是自包含的单文件程序，不需要安装 .NET。
 
 - 系统：Windows 10/11 x64。
 - 依赖：Microsoft Edge WebView2 Runtime。Windows 10/11 通常已预装；若启动时提示缺失，按窗口中的链接安装后重试。
@@ -109,8 +109,7 @@ dotnet run --project app -c Debug
 
 ```text
 .
-├─ build.ps1                  # 单文件发布脚本
-├─ dist\STM32Atlas.exe        # 交付产物
+├─ build.ps1                  # 单文件发布脚本（产物 dist\STM32Atlas.exe，不入库）
 ├─ tools\
 │  ├─ data-selftest.mjs       # 数据自测（node，零依赖）
 │  ├─ gen-pins.py             # 从引脚定义 xlsx 生成 data\pins.js

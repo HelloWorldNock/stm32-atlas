@@ -42,7 +42,7 @@
 
 | 目录 | 用途 |
 | --- | --- |
-| `dist/STM32Atlas.exe` | 最终交付单文件 exe（win-x64、自包含） |
+| `dist/STM32Atlas.exe` | 最终交付单文件 exe（win-x64、自包含）；不入库，发布在 GitHub Releases `v1.0.0` |
 | `%LOCALAPPDATA%\Stm32Atlas\ui\<ver>-<ts>/` | 首次运行自动解压的 UI 资源目录 |
 
 ---
