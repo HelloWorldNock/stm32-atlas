@@ -179,6 +179,23 @@ namespace Stm32Atlas
                     if (root.TryGetProperty("href", out var hrefEl)) NavigateMain(hrefEl.GetString());
                     return;
                 }
+                if (type.GetString() == "materials-probe")
+                {
+                    ReplyMaterialsInfo();
+                    return;
+                }
+                if (type.GetString() == "open-root")
+                {
+                    var pick = root.TryGetProperty("pick", out var pickEl) && pickEl.ValueKind == JsonValueKind.True;
+                    HandleOpenRoot(pick);
+                    return;
+                }
+                if (type.GetString() == "open-path")
+                {
+                    var rel = root.TryGetProperty("path", out var pathEl) ? pathEl.GetString() : null;
+                    HandleOpenPath(rel);
+                    return;
+                }
                 if (type.GetString() != "window") return;
                 if (!root.TryGetProperty("action", out var action)) return;
 
@@ -385,6 +402,43 @@ namespace Stm32Atlas
             Activate();
             var script = "location.hash = " + JsonSerializer.Serialize(href) + ";";
             _ = Web.CoreWebView2.ExecuteScriptAsync(script);
+        }
+
+        /// <summary>回报 模块资料 根目录，页面据此显示真实路径。</summary>
+        private void ReplyMaterialsInfo()
+        {
+            var root = MaterialsRoot.Find();
+            var payload = JsonSerializer.Serialize(new
+            {
+                type = "materials-info",
+                ok = root != null,
+                root = root ?? ""
+            });
+            Web.CoreWebView2?.PostWebMessageAsJson(payload);
+        }
+
+        private void HandleOpenRoot(bool pick)
+        {
+            var root = pick ? MaterialsRoot.Pick() : MaterialsRoot.Find();
+            if (pick && root == null) return;   /* 用户在对话框里取消了 */
+            if (root != null) MaterialsRoot.Open(root);
+
+            var payload = JsonSerializer.Serialize(new
+            {
+                type = "materials-info",
+                ok = root != null,
+                root = root ?? ""
+            });
+            Web.CoreWebView2?.PostWebMessageAsJson(payload);
+        }
+
+        private void HandleOpenPath(string? relative)
+        {
+            var ok = MaterialsRoot.TryResolve(relative, out var full) && MaterialsRoot.Open(full);
+            if (ok) return;
+
+            var payload = JsonSerializer.Serialize(new { type = "open-result", ok = false });
+            Web.CoreWebView2?.PostWebMessageAsJson(payload);
         }
 
         /// <summary>应用内划词：网页把选中文字发过来，有内容就换成迷你窗查询。</summary>

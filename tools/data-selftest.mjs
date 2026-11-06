@@ -8,12 +8,16 @@
    ============================================================ */
 
 import { CASES, CASE_MAP } from "../app/ui/data/cases.js";
-import { KB_ARTICLES } from "../app/ui/data/kb.js";
+import { KB_ARTICLES, KB_MAP } from "../app/ui/data/kb.js";
 import { PINS, PIN_MAP, PIN_BY_GPIO } from "../app/ui/data/pins.js";
+import { MATERIAL_MODULES } from "../app/ui/data/materials.js";
 import { caseSources } from "../app/ui/data/case-src.js";
 import { circuitSvg } from "../app/ui/sim/sch.js";
 import { createModel } from "../app/ui/sim/models.js";
 import { chipSvg, usedPins } from "../app/ui/sim/pinout.js";
+import { existsSync, readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import {
   FUNCTIONS, FUNCTION_MAP, WORKFLOWS, WORKFLOW_MAP,
   PERIPHERALS, PERIPH_MAP, STATS, searchAll
@@ -272,6 +276,45 @@ for (const p of PINS) {
   ok(`引脚图可渲染：${p.no}`, svg.includes("chip-svg") && !/undefined|NaN/.test(svg));
   ok(`引脚图可点：${p.no}`, svg.includes(`data-chip-pin="${p.gpio || p.name}"`));
 }
+
+/* ---------------- 模块资料索引 ---------------- */
+
+const matRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "模块资料");
+const matOnDisk = existsSync(matRoot);
+const dirHasFiles = dir => {
+  if (!matOnDisk) return true;                 /* 没带资料目录时只校验索引自身 */
+  try { return readdirSync(join(matRoot, dir)).length > 0; } catch { return false; }
+};
+
+ok("资料模块数量", MATERIAL_MODULES.length >= 10, String(MATERIAL_MODULES.length));
+const matIds = new Set();
+const MAT_KINDS = new Set(["pdf", "img", "doc", "pcb", "prog", "tool", "pack", "other"]);
+for (const m of MATERIAL_MODULES) {
+  ok(`资料 id 唯一：${m.id}`, !!m.id && !matIds.has(m.id));
+  matIds.add(m.id);
+  ok(`资料序号：${m.id}`, Number.isInteger(m.no) && m.no >= 1, String(m.no));
+  ok(`资料有目录：${m.id}`, isText(m.dir));
+  ok(`资料目录存在：${m.id}`, dirHasFiles(m.dir), m.dir);
+  bil(`资料名称：${m.id}`, m.name);
+  bil(`资料摘要：${m.id}`, m.summary, 8, 8);
+  ok(`资料标签：${m.id}`, Array.isArray(m.tags) && m.tags.length > 0);
+  ok(`资料体积：${m.id}`, m.size > 0, String(m.size));
+  ok(`资料文件数：${m.id}`, m.files > 0, String(m.files));
+  ok(`资料资源非空：${m.id}`, Array.isArray(m.resources) && m.resources.length > 0);
+  for (const r of m.resources) {
+    ok(`资源路径前缀：${m.id} / ${r.name}`, String(r.path || "").startsWith(m.dir + "/"), r.path);
+  }
+  for (const c of m.cases || []) ok(`资料案例可解析：${m.id} -> ${c}`, CASE_MAP.has(c), c);
+  for (const w of m.workflows || []) ok(`资料流程可解析：${m.id} -> ${w}`, WORKFLOW_MAP[w] !== undefined, w);
+  for (const k of m.kb || []) ok(`资料知识点可解析：${m.id} -> ${k}`, KB_MAP[k] !== undefined, k);
+  for (const [kind, n] of Object.entries(m.kinds || {})) {
+    ok(`资料类别已知：${m.id} ${kind}`, MAT_KINDS.has(kind), kind);
+    ok(`资料类别计数：${m.id} ${kind}`, Number.isInteger(n) && n >= 0, String(n));
+  }
+}
+const matHit = searchAll("OLED");
+ok("搜索命中资料模块", (matHit.materials || []).length > 0, String((matHit.materials || []).length));
+ok("搜索资料带 code", !!(matHit.materials || [])[0]?.code);
 
 /* ---------------- 输出 ---------------- */
 

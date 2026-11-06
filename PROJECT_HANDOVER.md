@@ -14,6 +14,8 @@
 - **圆角无边框窗口**：Win11 由 DWM 裁切，Win10 优雅退化为方角；整条标题栏可拖动
 - **迷你查询窗**：置顶透明小窗，热键呼出、边打边查；可调不透明度与是否置顶（记忆到 `mini.json`）；自动避开屏幕边缘；在任意程序里划词即查（不用切回主窗口）
 - **DPI 感知**：per-monitor v2，150% / 200% 缩放下按真实分辨率渲染，不发虚
+- **安卓手机版 APK**：同一套界面跑进系统 WebView，离线、零权限；侧栏变抽屉、流程图支持单指平移 / 双指缩放、系统返回键按「页面 → 抽屉 → 退出」逐级后退（MuMu 模拟器实测，Android 15 / API 35）
+- **资料查询**：14 个模块资料的目录索引（10049 份文件 / 440.8 MB），模块卡片 + 目录树 + 页内筛选；桌面版可直接用资源管理器打开文件或目录，网页 / 安卓版降级为复制相对路径
 
 适用人群：嵌入式工程师、CubeMX 迁移者、中断优先级调试者、外设时序敏感场景开发者。
 
@@ -33,16 +35,28 @@
 
 ### 界面与数据
 
-- **HTML/CSS/JS**：原生 ES module，无构建工具依赖。
+- **HTML/CSS/JS**：原生 ES module，无构建工具依赖。桌面版在 WebView2（Chromium 现代版）里跑，安卓版在系统 WebView 里跑，**两端共用 `app/ui` 这一份源码**。
 - **字体**：IBM Plex Sans / JetBrains Mono（woff2 本地化），中文回退 Microsoft YaHei UI。
 - **图标**：内联 SVG（`app/ui/icons.js`）。
 - **数据**：JSON-like JS 文件聚合在 `data/index.js`，含完整性审计逻辑。
+
+### 安卓版
+
+| 项目 | 版本/备注 |
+| --- | --- |
+| 语言 / SDK | Java（无 Kotlin、无 androidx、无第三方依赖） |
+| minSdk / targetSdk | 24 / 35（Android 7.0 起） |
+| JDK | 17（`JAVA_HOME`，脚本回退 `C:\jdk17`） |
+| Android SDK | `ANDROID_HOME`（回退 `D:\AndroidSdk`），需 `platforms;android-35` + `build-tools;35.0.0` |
+| 构建 | **不用 Gradle / AGP**：`aapt2` → `javac` → `d8` → `zipalign` → `apksigner` |
+| 权限 | 无（不申请 INTERNET，纯离线） |
 
 ### 构建产物
 
 | 目录 | 用途 |
 | --- | --- |
 | `dist/STM32Atlas.exe` | 最终交付单文件 exe（win-x64、自包含）；不入库，发布在 GitHub Releases `v1.0.0` |
+| `dist/STM32Atlas.apk` | 安卓安装包（API 24+，离线零权限）；不入库 |
 | `%LOCALAPPDATA%\Stm32Atlas\ui\<ver>-<ts>/` | 首次运行自动解压的 UI 资源目录 |
 
 ---
@@ -53,13 +67,24 @@
 .
 ├─ PROJECT_HANDOVER.md       # 本文档
 ├─ README.md                  # 用户侧快速参考
+├─ build.ps1                  # 单文件发布脚本（产物 dist\STM32Atlas.exe，不入库）
+├─ build-android.ps1          # 安卓 APK 脚本（aapt2 + javac + d8 + zipalign + apksigner）
+├─ 模块资料\                  # 440.8 MB 原始资料（不入库，页面只读索引）
 ├─ tools\
 │  ├─ data-selftest.mjs       # 数据自测（node，零依赖）
 │  ├─ gen-pins.py             # 引脚定义 xlsx → data\pins.js
-│  └─ gen-case-src.py         # 教程工程 → data\case-src.js
+│  ├─ gen-case-src.py         # 教程工程 → data\case-src.js
+│  ├─ gen-materials.py        # 模块资料 → data\materials.js
+│  └─ gen-android-icon.py     # 生成安卓启动器图标（各密度 PNG）
+├─ android\                   # 安卓壳（纯 Java，无 Gradle）
+│  ├─ app\AndroidManifest.xml
+│  ├─ app\java\com\stm32atlas\app\MainActivity.java
+│  ├─ app\res\                # 图标 / 应用名 / 主题（values、values-en、mipmap-*）
+│  └─ keystore\atlas.jks      # 签名用 PKCS12（首次构建自动生成，不入库）
 └─ app\                       # 源码（含 Debug/Release）
    ├─ MainWindow.xaml(.cs)    # WPF 圆角窗口 + WebView2 宿主 + 消息桥 + DWM 圆角 + 热键/划词
    ├─ MiniWindow.xaml(.cs)    # 迷你查询窗（纯 WPF，不另开 WebView2）
+   ├─ MaterialsRoot.cs        # 资料根目录发现 / 选择 / 越界校验 / ShellExecute 打开
    ├─ app.manifest            # DPI 感知：per-monitor v2（高分屏不发虚）
    ├─ App.xaml                # WPF 应用启动、主题与语言回退
    ├─ Stm32Atlas.csproj       # .NET 6 项目，含内嵌 UI、发布配置
@@ -67,6 +92,7 @@
    └─ ui\                     # 静态 HTML/CSS/JS（已嵌入）
       ├─ index.html, styles.css, app.js
       ├─ i18n.js, icons.js
+      ├─ compat.css           # 老 WebView 兜底（color-mix 等）+ 安卓触屏微调
       ├─ fonts/\              # woff2 字体
       ├─ sim\
       │  ├─ sch.js            # 电路图 SVG 渲染（行布局 / 分压支路 / 模块方块）
@@ -86,6 +112,7 @@
          ├─ pins.js           # 48 个引脚（gen-pins.py 生成）
          ├─ cases.js          # 14 个江协案例：电路/控件/读数/模型/讲解/判据
          ├─ case-src.js       # 案例源码（gen-case-src.py 抽取）
+         ├─ materials.js      # 14 个模块资料索引（gen-materials.py 生成）
          └─ index.js          # 聚合、对照表、反查索引、搜索、审计
 ```
 
@@ -97,7 +124,7 @@
 | `MiniWindow.xaml(.cs)` | 迷你查询窗：432 宽置顶透明小窗，搜索框 + 结果列表 + 设置面板（置顶 / 不透明度，存 `mini.json`）+ 划词开关；`ApplyTheme()` 换 9 个画刷、`ApplyLanguage()` 中英、`ShowResults(json)` 解析宿主回传的条目、`PlaceNearCursor()` 按 `MonitorFromPoint` + `GetDpiForMonitor` 在物理像素空间定位并做工作区钳制。 |
 | `app.manifest` | `dpiAware=true/pm` + `dpiAwareness=permonitorv2,permonitor`；缺它时进程是 DPI 非感知，150% 缩放下整窗被位图放大、界面发虚。 |
 | `UiAssets.cs` | 内嵌 UI 资源解压到 `%LOCALAPPDATA%\Stm32Atlas\ui\<ver>-<ts>/`，Debug 版读磁盘 `ui`。 |
-| `app.js` | 路由（`#/home`/`#/functions?lib=&p=`/`#/fn/<id>`/`#/wf/<id>`/`#/cases/<id>`/`#/chip/<pin>`/`#/kb/<id>`/`#/map`/`#/search?q=`/`#/favorites`）、渲染、流程图引擎、案例模拟循环（`caseStart`/`casePaint` 局部重绘）、引脚图页、搜索、收藏、Toast、快捷键（`Ctrl+K` / `/`）。 |
+| `app.js` | 路由（`#/home`/`#/functions?lib=&p=`/`#/fn/<id>`/`#/wf/<id>`/`#/cases/<id>`/`#/chip/<pin>`/`#/kb/<id>`/`#/materials/<id>`/`#/map`/`#/search?q=`/`#/favorites`）、渲染、流程图引擎、案例模拟循环（`caseStart`/`casePaint` 局部重绘）、引脚图页、资料树（`matRow`/`matNode`/`bindMaterialsUi`）、搜索、收藏、Toast、快捷键（`Ctrl+K` / `/`）。 |
 | `sim/sch.js` | 电路图 SVG：`LAYOUT` 行布局（一引脚一行）、`drawChain` 串元件（导线跨过 `partGap`）、`drawDivider` 分压支路（电位器竖接 3V3/GND，抽头接回引脚）、`drawModuleBox` 跨行模块方块、`railGlyph` 电源/地符号。`circuitSvg(item, live, lang)` 的 `live = { pins, parts }` 直接吃模型输出。 |
 | `sim/models.js` | 14 个行为模型：`createModel(item, getControls)` → `{ reset, step(dt), view() }`；`view()` 给 `{ pins, parts, values, screen, log }`；`idlePins()` 给按键 / I²C 引脚补空闲电平，保证图上每个引脚都有电压。 |
 | `sim/pinout.js` | LQFP48 引脚图：`pinGeometry(no)`（左 1–12 → 底 13–24 → 右 25–36 → 顶 37–48）、`chipSvg(selected, { used })`、`usedPins(cases)`。标签两行都排在封装外（`NEAR=12` / `FAR=34`），SVG 的 `rotate` 是顺时针，顶边要用 `rotate(90)+anchor:end`。 |
@@ -106,12 +133,20 @@
 | `data/cases.js` | 14 个江协案例：`channels`/`modules` 描述电路，`controls`/`readouts` 描述交互，`model` 指定行为模型，`explain`/`check` 讲原理与判据。 |
 | `data/pins.js` | 48 个引脚（`no/name/type/level/gpio/altList/remapList/port/bit/kind/periphs`），由 `gen-pins.py` 生成，勿手改。 |
 | `data/case-src.js` | 案例源码（`CASE_SOURCES` + `caseSources(folder, files)`），由 `gen-case-src.py` 从教程工程抽取，勿手改。 |
+| `data/materials.js` | 14 个模块资料的索引（`MATERIAL_MODULES`/`MATERIAL_MAP`/`MATERIAL_STATS`）：模块名与摘要（中英）、标签、关联的案例/流程/知识点、工作量与体积、两层目录树。由 `gen-materials.py` 生成，勿手改；模块文案写在脚本的 `MODULES` 表里。 |
+| `MaterialsRoot.cs` | 资料根目录发现（`%LOCALAPPDATA%\Stm32Atlas\materials.json` → `STM32ATLAS_MATERIALS` 环境变量 → 从 exe/当前目录向上 6 级找 `模块资料`），`Pick()` 用 WinForms `FolderBrowserDialog` 选目录，`TryResolve()` 把相对路径拼成绝对路径并挡住越界，`Open()` 用 `ShellExecute` 打开文件/文件夹。 |
 | `data/kb.js` | 7 篇硬件知识文章：段落 / 列表 / 公式 / 警告块 + 教程页码。 |
 | `data/index.js` | 聚合数据 + 完整性审计（`FUNCTION_MAP`/`WORKFLOW_MAP`/`EQUIVALENCES`/`FN_WORKFLOWS`，以及知识/案例/引脚的 dangling 引用）。 |
-| `tools/data-selftest.mjs` | 零依赖数据自测：函数与流程引用、知识结构、案例电路/控件/读数/模型/源码、48 引脚自洽、电路图渲染无 `undefined`/`NaN`。 |
+| `tools/data-selftest.mjs` | 零依赖数据自测：函数与流程引用、知识结构、案例电路/控件/读数/模型/源码、48 引脚自洽、14 个模块资料索引（关联 id 可解析、资源路径前缀），并渲染电路图确认无 `undefined`/`NaN`。 |
 | `tools/gen-pins.py` | 用 `zipfile` + `ElementTree` 读引脚定义 xlsx，按复用/重定义文本提取 `periphs`，生成 `data/pins.js`。 |
 | `tools/gen-case-src.py` | 按 `CASES[].folder/files` 从教程工程读源码（UTF-8 优先、回退 GBK），生成 `data/case-src.js`。 |
-| `build.ps1` | 一键发布单文件 exe：清空 `dist` → `dotnet publish -c Release -r win-x64 --self-contained true ...`。 |
+| `tools/gen-materials.py` | 扫描 `模块资料\`：一次遍历统计每个模块的文件数/体积/类别，按 `EXPAND_TO=2` 建两层目录树（每层最多 `MAX_CHILDREN=80` 项，其余记入 `more`），模块文案取自脚本内 `MODULES` 表，输出 `data/materials.js`。新增或改名模块后重跑它。 |
+| `build.ps1` | 一键发布单文件 exe：清空 `dist` 里上一版 exe（保留 `STM32Atlas.apk`）→ `dotnet publish -c Release -r win-x64 --self-contained true ...`。 |
+| `build-android.ps1` | 安卓构建：`-Clean` / `-Install` / `-Run` / `-DebugBuild` / `-Serial`。先把 `android\app` 与 `app\ui` 复制到 `%TEMP%\stm32-atlas-android`（**aapt2 打不开含中文的路径**），再 aapt2 compile+link → javac → d8 → 自写 `assets/ui/...` 进 zip（**`aapt2 -A` 在 Windows 上会写成 `assets\ui\...`，AssetManager 读不到**）→ zipalign → apksigner → 复制到 `dist`。 |
+| `android\app\MainActivity.java` | 安卓壳：`FrameLayout` + `WebView`；`shouldInterceptRequest` 把 `https://atlas.local/*` 映射到 `assets/ui`（`file://` 下 ES module 会被 CORS 拦）；`addJavascriptInterface(..., "AtlasAndroid")` 收 `{type:"theme",value,lang}` 切状态栏图标明暗 + 窗口背景 + `SharedPreferences("atlas")`；targetSdk 35 强制 edge-to-edge，故 `setDecorFitsSystemWindows(false)` + `setOnApplyWindowInsetsListener` 补 `systemBars\|displayCutout`，`bottom` 取 `max(nav, ime)`；`onBackPressed` 先 `canGoBack()` 后退再退出；`configChanges` 覆盖旋转/密度/字号变更，避免重建 WebView 丢状态；debuggable 构建才开 `setWebContentsDebuggingEnabled(true)`。 |
+| `android\app\AndroidManifest.xml` | 无 INTERNET 权限、`usesCleartextTraffic=false`、`exported=true`、`launchMode=singleTask`、`windowSoftInputMode=adjustResize`。 |
+| `app\ui\compat.css` | 老引擎兜底：包在 `@supports not (background-color: color-mix(...))` 里，用逗号 RGB 变量 + `rgba()` 复刻 `color-mix()`（Chromium 111 才有，MuMu 的 WebView 是 110）；另外有 `html[data-host="android"]` 的触屏微调（去 tap 高亮、隐藏滚动条、`overscroll-behavior`、流程图 `touch-action`）。 |
+| `tools/gen-android-icon.py` | 生成启动器图标：8× 超采样画 `#0B1120` 圆角方块 + `#22C55E` 字形，输出各密度 `ic_launcher.png` 与透明前景 `ic_launcher_fg.png`（配 `mipmap-anydpi-v26` 自适应图标）。 |
 
 ---
 
@@ -225,8 +260,10 @@ wf({
 | `#/chip/<pin>` | `PA0` / `PB12` / `VBAT`… | 选中该引脚的引脚图页。 |
 | `#/kb` | 无 | 硬件知识库列表：7 篇文章，按外设标注强调色。 |
 | `#/kb/<id>` | 文章 id | 知识文章：正文卡片 + 教程页码 + 关联流程/函数。 |
+| `#/materials` | 无 | 资料查询列表：14 张模块卡片 + 资料根目录条（桌面版显示真实路径与「打开目录 / 换目录」）+ 页内筛选。 |
+| `#/materials/<id>` | 模块 id（`core`/`oled`/`ch340`…） | 模块资料详情：目录树（两层，可展开）+ 页内筛选 + 资料构成统计 + 关联案例/流程/知识点。 |
 | `#/map` | 无 | 库对照表：按外设逐行对比 SPL/HAL 字段差异 + 对应关系。 |
-| `#/search?q=` | 函数名/外设/标签/中英描述 | 全局搜索，支持中英文混合与模糊匹配；结果分组为外设 / 知识点 / 函数 / 流程。 |
+| `#/search?q=` | 函数名/外设/标签/中英描述 | 全局搜索，支持中英文混合与模糊匹配；结果分组为外设 / 知识点 / 资料 / 函数 / 流程。 |
 | `#/favorites` | 无 | 收藏列表（持久化）。 |
 
 已废弃的 `#/sim` 与 `#/build` 会回落到首页，不再有对应视图。
@@ -264,6 +301,11 @@ wf({
 | WPF → Web | `mini-open` | `href` | 打开条目（主窗恢复后 `location.hash = href`）。 |
 | Web → WPF | `selection` | `text` | 应用内划词（`getSelection()`，2–80 字，去重）。 |
 | Web → WPF | `theme` | `value`, `lang` | 主题 / 语言变化，宿主同时刷新原生标题栏与迷你窗。 |
+| Web → WPF | `materials-probe` | 无 | 进入资料页时探测一次根目录；宿主回 `materials-info`。 |
+| WPF → Web | `materials-info` | `ok`, `root` | `ok=false` 时页面显示「未找到资料目录」，`ok=true` 显示真实路径 + 打开/换目录按钮。 |
+| Web → WPF | `open-root` | `pick` | `pick=false` 打开已定位的根目录；`true` 先弹目录选择框（选中后写 `materials.json`）。 |
+| Web → WPF | `open-path` | `path`, `kind` | `path` 是相对 `模块资料\` 的路径；宿主 `TryResolve()` 校验后 `ShellExecute` 打开。 |
+| WPF → Web | `open-result` | `ok` | 打开失败时回 `ok=false`，页面弹「打不开这个路径」。 |
 
 划词取词链路：迷你窗点「眼睛」→ `SetSelectionWatcher(true)` → 装 `WH_MOUSE_LL` 全局鼠标钩子；`LBUTTONDOWN` 记起点与时刻，`LBUTTONUP` 时位移 ≥8px、间隔 ≥90ms、且前台不是本进程才动手；随后 `CaptureSelection()` 先取 `GetClipboardSequenceNumber()`，发一次 `Ctrl+C`，420ms 内每 30ms 轮询序号变化再读剪贴板（**不能用内容比对**：选中词恰好等于剪贴板旧内容时会误判成「没复制」），取 trim 后 2–80 字。取到就 `ToggleMini(text, nearCursor:true)`。
 
@@ -297,9 +339,17 @@ wf({
 - `blocks` 支持 `p`、`list`、`formula`、`warn`；行内只放行 `<b>` / `<em>` / `<code>` / `<br>`（先转义再白名单还原，避免注入）。
 - 每条结论带 `refs[].page`，对应仓库根的 `STM32入门教程.md`。
 
+### 模块资料（data/materials.js + tools/gen-materials.py + MaterialsRoot.cs）
+
+- 数据源是仓库根的 `模块资料\`：14 个 `N-模块名` 目录，共 440.8 MB / 10049 份文件，**不入库**（`.gitignore` 已忽略）。界面只读索引，不打包原始文件：`app/ui/data/materials.js` 约 55 KB。
+- 生成：`python tools\gen-materials.py`。脚本用 `walk()` 得到每个模块的文件数/字节数/类别计数（`pdf / img / doc / pcb / prog / tool / pack / other`），再按 `EXPAND_TO = 2` 建两层目录树（模块 → 顶层资源 → 资源下一层），每层最多 `MAX_CHILDREN = 80` 个子项，超出的只记 `more` 计数；`path` 一律相对 `模块资料\`。
+- 模块文案（`name`/`summary` 中英、`code`、`tags`、`p`、`icon`、`cases`/`workflows`/`kb`）写在脚本内 `MODULES` 表里，按目录名索引。加新模块 = 加一张表项 + 重跑脚本；`data/index.js` 的审计会校验 `p`/`cases`/`workflows`/`kb` 引用是否存在。
+- 页面：`#/materials` 列表（`matCard`），`#/materials/<id>` 详情（`matNode` 渲染树、`bindMaterialsUi` 做页内筛选，`[data-mt]` 存小写检索串，`[data-mbranch]` 无可见子项时整枝隐藏）。
+- 打开文件：桌面版页面发 `open-path`，`MaterialsRoot.TryResolve()` 拼绝对路径后经 `Path.GetFullPath` 前缀校验确保仍在根内（挡住 `..` 越界），再 `Process.Start(UseShellExecute)`；网页 / 安卓没有宿主，按钮降级为复制相对路径。
+
 ### 验证
 
-- `node tools\data-selftest.mjs`：**3816 项断言**，覆盖函数/流程引用、7 篇知识的块结构与页码、14 个案例的电路/控件/读数/模型/源码、48 个引脚的自洽性，并渲染一遍电路图与 48 个引脚图确认没有 `undefined` / `NaN`，以及「案例不再残留旧功能字段」的回归检查。
+- `node tools\data-selftest.mjs`：**4166 项断言**，覆盖函数/流程引用、7 篇知识的块结构与页码、14 个案例的电路/控件/读数/模型/源码、48 个引脚的自洽性、14 个模块资料索引（id 唯一、序号单调、资源路径前缀、类别取值、关联 id 可解析，`模块资料` 存在时还检查目录真的在盘上），并渲染一遍电路图与 48 个引脚图确认没有 `undefined` / `NaN`，以及「案例不再残留旧功能字段」的回归检查。
 - 浏览器端（Edge + CDP）28 项端到端断言：导航 8 项（含引脚图）、案例 14 张卡、案例页电路 SVG / 引脚热点 / 读数 / 源码标签 / 运行与按住按钮、按键改变读数、滑杆改变 ADC 读数、串口表单收发、引脚图 48 个热点与占用高亮、`#/chip/PA9` 详情、点引脚切详情、`#/sim` 与 `#/build` 回落、主题切换、控制台无报错。
 
 ---
@@ -341,10 +391,29 @@ dotnet publish app\Stm32Atlas.csproj `
 
 产物：`dist\STM32Atlas.exe`（win-x64、自包含、单文件，约 62 MB）。
 
+### 安卓 APK 构建
+
+```powershell
+.\build-android.ps1                    # 只构建，产物 dist\STM32Atlas.apk
+.\build-android.ps1 -Install           # 顺带 adb install -r
+.\build-android.ps1 -Run               # 顺带启动（无设备时自动 adb connect 127.0.0.1:16384）
+.\build-android.ps1 -Clean -Run        # 清中间产物后重建并启动
+.\build-android.ps1 -DebugBuild -Run   # debuggable 构建，可用 chrome://inspect 调 WebView
+```
+
+要点：
+
+- `-DebugBuild` 不能写成 `-Debug`：`[CmdletBinding()]` 自带 `-Debug` 通用参数，重复定义会报错。
+- 脚本是 **UTF-8 with BOM**；Windows PowerShell 5.1 读无 BOM 文件会按 GBK 解析而无法报错，改动后要保住 BOM。
+- native 工具在 stage 目录跑（`%TEMP%\stm32-atlas-android`）；用 `$LASTEXITCODE` 判失败，因为 javac 会往 stderr 写 `Note:`，在 `$ErrorActionPreference='Stop'` 下会被误判为终止错误。
+- 签名：`android\keystore\atlas.jks`（PKCS12，storepass=keypass=`android`，alias=`atlas`，首次自动生成，不入库）。换机器重建后覆盖安装会签名不符，先 `adb uninstall com.stm32atlas.app`。
+- MuMu 上调 WebView：`adb forward tcp:9333 localabstract:webview_devtools_remote_<pid>`，再开 `http://127.0.0.1:9333/json/list` 取 ws 地址。
+
 ### 首次运行行为
 
 - WebView2 自动解压内嵌 UI 到 `%LOCALAPPDATA%\Stm32Atlas\ui\<ver>-<ts>\`。
 - 后续启动使用新目录；替换 exe 后会自动换路径，不会读到旧缓存。
+- 首次进「资料查询」页会探测 `模块资料\` 的位置：找不到时页面给「选择资料目录」按钮，选中后写入 `%LOCALAPPDATA%\Stm32Atlas\materials.json`，之后直接复用。
 
 ---
 
@@ -359,11 +428,14 @@ dotnet publish app\Stm32Atlas.csproj `
 5. **案例测试**：左侧「经典案例」→ LED 闪烁；详情应显示电路图、实时读数、运行/暂停、源码标签页、原理与相关函数。按「PWM 驱动舵机」的按键三次，角度应到 90°、CCR 1500、脉宽 1500 µs。
 6. **引脚测试**：左侧「引脚图」→ 点 `PA9`，右侧应显示 USART/TIM 相关复用功能与「用这个引脚的案例」。
 7. **知识库测试**：`#/kb/timer-pwm` 应显示教程页码与关联流程、函数。
+8. **资料查询测试**：`#/materials` 应显示 14 张模块卡片与真实资料根路径（`14 个模块 / 10049 份文件 / 440.8 MB`）；筛选 `OLED` 只剩 1 张卡；进 `#/materials/oled` 能看到目录树，点「打开目录」应在资源管理器里打开 `模块资料\8-OLED显示屏`。
+9. **安卓版测试**：`.\build-android.ps1 -Install -Run` → 首页正常、无可滚动溢出；左上角汉堡打开抽屉（含外设列表与底部统计）；搜索 `PWM` 有高亮；流程图单指平移、双指缩放；返回键先逐级后退，最后才退出。
 
 ### 日常开发
 
-- 修改 `app/ui/data/*.js`、`app/ui/styles.css` 或 `app/ui/app.js` 后，Debug 模式直接 `dotnet run`；Release 版本需重新运行 `build.ps1`。
+- 修改 `app/ui/data/*.js`、`app/ui/styles.css` 或 `app/ui/app.js` 后，Debug 模式直接 `dotnet run`；Release 版本需重新运行 `build.ps1`；安卓版共用同一套 `app/ui`，改动后要重跑 `build-android.ps1` 才会进 APK。
 - 新增函数/流程前，先确保 id 符合约定（建议 `lib.periph.action` / `wf.lib.action`）并补充 `tags`。
+- `模块资料\` 里增删文件或重命名模块后，重跑 `python tools\gen-materials.py` 更新索引（`data/materials.js` 是生成物，不要手改）。
 
 ### 扩展数据
 
@@ -405,7 +477,8 @@ fn({
 ```powershell
 python tools\gen-pins.py        # 引脚定义 xlsx → app\ui\data\pins.js
 python tools\gen-case-src.py    # 教程工程 → app\ui\data\case-src.js
-node tools\data-selftest.mjs    # 3816 项断言
+python tools\gen-materials.py   # 模块资料\ → app\ui\data\materials.js
+node tools\data-selftest.mjs    # 4166 项断言
 ```
 
 ---
@@ -418,6 +491,7 @@ node tools\data-selftest.mjs    # 3816 项断言
 4. **宏与位域速查**：将 `__HAL_RCC_GPIOA_CLK_ENABLE` 等宏单独列项（类似函数）。
 5. **案例扩展**：补 WS2812、I²C OLED、DMA 采样等视频后续内容；支持按难度/外设筛选。
 6. **知识库扩展**：加入时钟树、低功耗模式、EMC 布线要点等专题。
+7. **资料页增强**：文件预览（PDF / 图片内嵌）、按类别筛选目录树、把资料条目与函数条目互链、安卓版改为手动指定资料根后读取本地文件。
 
 ---
 
@@ -440,6 +514,9 @@ node tools\data-selftest.mjs    # 3816 项断言
 - 划词监听用 `WH_MOUSE_LL` 低级鼠标钩子，只做「按下/抬起位移判断 + 一次复制」，不记录鼠标轨迹；不开启时不装钩子。
 - 迷你窗刻意不嵌 WebView2：`AllowsTransparency` 窗口里的 WebView2 子 HWND 无法真透明，且会多一个浏览器进程；因此迷你窗只能用 WPF 控件渲染检索结果（没有富文本）。
 - 迷你窗的不透明度作用于整窗（含文字与阴影），最低 40%；置顶关掉后它可能被主窗或其他窗口遮住，此时热键仍能开 / 关。设置写在 `%LOCALAPPDATA%\Stm32Atlas\mini.json`，删掉这个文件即恢复默认（100% / 置顶）。
+- 安卓版共用同一套界面文件（`app/ui`），改动后要 exe 和 APK 各自重新构建。它跑在系统 WebView 里：老引擎（Chromium ≤110）不支持 `color-mix()`，`app/ui/compat.css` 在检测到缺支持时接管配色与半透明层；新增依赖 `color-mix()` 的样式时顺手补一条兜底，否则老手机上那条声明会被整条丢弃。主题与状态栏图标明暗通过 `AtlasAndroid` 接口回传，`html[data-host="android"]` 用于触屏微调。
+- APK 不申请任何权限、不联网。页面由 `WebViewClient.shouldInterceptRequest` 从 `assets\ui` 以 `https://atlas.local` 这个虚拟 origin 流式返回，不能用 `file://`：`file://` 下 `type="module"` 的脚本会被 CORS 拦掉。
+- 资料查询只读索引：`data/materials.js` 是 `tools/gen-materials.py` 的生成物，原始文件不入库；`模块资料\` 缺失时页面显示「未找到资料目录」，可用按钮重新指定并记忆到 `%LOCALAPPDATA%\Stm32Atlas\materials.json`。网页 / 安卓版没有宿主桥，只能复制相对路径。
 
 ---
 
@@ -450,10 +527,16 @@ node tools\data-selftest.mjs    # 3816 项断言
 | `PROJECT_HANDOVER.md` | 本文档 |
 | `README.md` | 用户侧快速参考 |
 | `dist/STM32Atlas.exe` | 最终交付单文件 exe（win-x64、自包含） |
-| `build.ps1` | 一键重新发布脚本 |
-| `tools/data-selftest.mjs` | 函数/流程/知识/案例/引脚数据自测（3816 项断言） |
+| `dist/STM32Atlas.apk` | 安卓安装包（API 24+，离线零权限） |
+| `build.ps1` | 一键重新发布 exe 的脚本 |
+| `build-android.ps1` | 一键重新打 APK 的脚本（支持 `-Install` / `-Run` / `-DebugBuild`） |
+| `android\` | 安卓壳源码：manifest、`MainActivity.java`、res（图标 / 应用名 / 主题） |
+| `tools/gen-android-icon.py` | 生成安卓启动器图标 |
+| `app\ui\compat.css` | 老 WebView 的 `color-mix()` 兜底 + 安卓触屏微调 |
+| `tools/data-selftest.mjs` | 函数/流程/知识/案例/引脚/资料索引数据自测（4166 项断言） |
 | `tools/gen-pins.py` | 从引脚定义 xlsx 生成 `app/ui/data/pins.js` |
 | `tools/gen-case-src.py` | 从教程工程抽取源码，生成 `app/ui/data/case-src.js` |
+| `tools/gen-materials.py` | 从 `模块资料\` 生成 `app/ui/data/materials.js` |
 | `app\` | Debug 源码 + UI 资源（含 woff2 字体） |
 
 ---
@@ -466,6 +549,10 @@ dotnet run --project app -c Debug
 
 # Release 单文件
 powershell -ExecutionPolicy Bypass -File .\build.ps1
+
+# 安卓 APK
+.\build-android.ps1
+.\build-android.ps1 -Install -Run
 
 # 数据自测
 node tools\data-selftest.mjs

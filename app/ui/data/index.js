@@ -9,10 +9,12 @@ import { WF_SYSTEM } from "./wf-system.js";
 import { KB_ARTICLES } from "./kb.js";
 import { CASES, CASE_MAP } from "./cases.js";
 import { PINS, PIN_MAP, PIN_BY_GPIO } from "./pins.js";
+import { MATERIAL_MODULES, MATERIAL_MAP } from "./materials.js";
 
 export { PERIPHERALS, PERIPH_MAP };
 export { KB_ARTICLES, CASES, CASE_MAP };
 export { PINS, PIN_MAP, PIN_BY_GPIO };
+export { MATERIAL_MODULES, MATERIAL_MAP };
 
 export const KB_MAP = Object.fromEntries(KB_ARTICLES.map(a => [a.id, a]));
 
@@ -73,7 +75,9 @@ export const STATS = {
   workflows: WORKFLOWS.length,
   peripherals: PERIPHERALS.length,
   equivalences: EQUIVALENCES.length,
-  steps: WORKFLOWS.reduce((n, w) => n + w.steps.length, 0)
+  steps: WORKFLOWS.reduce((n, w) => n + w.steps.length, 0),
+  materials: MATERIAL_MODULES.length,
+  materialFiles: MATERIAL_MODULES.reduce((n, m) => n + m.files, 0)
 };
 
 /* ---- search ---- */
@@ -121,6 +125,20 @@ const kbFields = a => [
   [kbText(a), 1]
 ];
 
+/* 资料按“模块名 → 顶层文件名 → 标签”给权重，文件名权重最高：查 “TCRT5000” 直接命中 */
+const matFileNames = m => m.resources.map(r => r.name).join(" ");
+
+const matFields = m => [
+  [m.code, 7],
+  [m.dir, 7],
+  [m.name.zh, 8],
+  [m.name.en, 7],
+  [(m.tags || []).join(" "), 6],
+  [matFileNames(m), 5],
+  [m.summary.zh, 2],
+  [m.summary.en, 1]
+];
+
 function score(fields, tokens) {
   let total = 0;
   for (const token of tokens) {
@@ -140,7 +158,7 @@ function score(fields, tokens) {
 
 export function searchAll(query, { limit = 30 } = {}) {
   const q = norm(query).trim();
-  if (!q) return { functions: [], workflows: [], peripherals: [], kb: [], tokens: [] };
+  if (!q) return { functions: [], workflows: [], peripherals: [], kb: [], materials: [], tokens: [] };
   const tokens = q.split(/\s+/).filter(Boolean);
   const functions = FUNCTIONS
     .map(f => ({ item: f, s: score(fnFields(f), tokens) }))
@@ -166,7 +184,13 @@ export function searchAll(query, { limit = 30 } = {}) {
       return tokens.every(t => hay.includes(t));
     })
     .slice(0, 6);
-  return { functions, workflows, peripherals, kb, tokens };
+  const materials = MATERIAL_MODULES
+    .map(m => ({ item: m, s: score(matFields(m), tokens) }))
+    .filter(x => x.s > 0)
+    .sort((a, b) => b.s - a.s)
+    .slice(0, 6)
+    .map(x => x.item);
+  return { functions, workflows, peripherals, kb, materials, tokens };
 }
 
 /* ---- integrity check (dev aid, harmless in production) ---- */
@@ -185,6 +209,12 @@ export function searchAll(query, { limit = 30 } = {}) {
     if (!PERIPH_MAP[a.p]) missing.push(`${a.id} -> peripheral ${a.p}`);
     for (const id of a.related?.workflows || []) if (!WORKFLOW_MAP[id]) missing.push(`${a.id} -> wf ${id}`);
     for (const id of a.related?.functions || []) if (!FUNCTION_MAP[id]) missing.push(`${a.id} -> fn ${id}`);
+  }
+  for (const m of MATERIAL_MODULES) {
+    if (m.p && !PERIPH_MAP[m.p]) missing.push(`material ${m.id} -> peripheral ${m.p}`);
+    for (const id of m.cases || []) if (!CASE_MAP.has(id)) missing.push(`material ${m.id} -> case ${id}`);
+    for (const id of m.workflows || []) if (!WORKFLOW_MAP[id]) missing.push(`material ${m.id} -> wf ${id}`);
+    for (const id of m.kb || []) if (!KB_MAP[id]) missing.push(`material ${m.id} -> kb ${id}`);
   }
   if (missing.length) console.warn("[data] unresolved ids:\n" + missing.join("\n"));
 })();

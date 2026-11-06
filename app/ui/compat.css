@@ -1,0 +1,112 @@
+/* ------------------------------------------------------------------
+   compat.css — 老引擎兜底
+   ------------------------------------------------------------------
+   安卓 WebView 版本随系统走，MuMu / Android 15 上是 Chromium 110，
+   而 color-mix() 要到 Chromium 111 才支持；缺了它，styles.css 里依赖
+   它做"半透明着色"的一批声明会被整条丢弃（顶栏底色、徽标描边、
+   搜索高亮 mark、流程图点阵等）。
+
+   这里用 rgba() + 主题变量重写同一批规则。块内所有规则只在引擎
+   不支持 color-mix 时生效，桌面 WebView2 / 新浏览器完全不受影响。
+   ------------------------------------------------------------------ */
+
+@supports not (background-color: color-mix(in srgb, red 50%, blue)) {
+
+  :root {
+    --k-std: 245, 165, 36;
+    --k-hal: 56, 189, 248;
+    --k-violet: 167, 139, 250;
+    --k-accent: 34, 197, 94;
+    --k-danger: 239, 68, 68;
+    --k-faint: 102, 122, 150;
+    --k-border: 30, 44, 69;
+    --k-border-strong: 46, 63, 92;
+    --k-bg: 11, 17, 32;
+  }
+
+  html[data-theme="light"] {
+    --k-std: 167, 90, 5;
+    --k-hal: 3, 105, 161;
+    --k-violet: 109, 74, 224;
+    --k-accent: 18, 138, 70;
+    --k-danger: 185, 28, 28;
+    --k-faint: 108, 127, 153;
+    --k-border: 220, 229, 241;
+    --k-border-strong: 199, 213, 232;
+    --k-bg: 243, 246, 251;
+  }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar-thumb { background: rgba(var(--k-border-strong), .85); }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(var(--k-faint), .7); }
+
+  /* 导航 / 顶栏 */
+  .nav-item:hover { background: var(--surface-2); }
+  .topbar { background: rgba(var(--k-bg), .86); }
+
+  /* 外设列表 */
+  .periph-item.is-active { background: var(--surface-2); border-color: var(--pcolor); }
+  .periph-dot { box-shadow: none; }
+
+  /* 徽标 */
+  .badge--std { border-color: rgba(var(--k-std), .34); }
+  .badge--hal { border-color: rgba(var(--k-hal), .34); }
+  .badge--macro { border-color: rgba(var(--k-violet), .34); background: rgba(var(--k-violet), .11); }
+
+  /* 芯片 / 库标签 */
+  .pchip { border-color: var(--c); background: var(--surface-2); }
+  .chip.is-active { border-color: rgba(var(--k-accent), .45); background: var(--accent-soft); }
+
+  /* 按钮 */
+  .btn--primary:hover { background: var(--accent); }
+  .btn--danger { border-color: rgba(var(--k-danger), .30); background: rgba(var(--k-danger), .08); }
+
+  /* 收藏 / 复制图标按钮 */
+  .icon-action.is-on { border-color: rgba(var(--k-std), .40); }
+  .icon-action.is-on .ico { fill: rgba(var(--k-std), .22); }
+
+  .periph-card__ico { background: var(--surface-2); border-color: var(--border); }
+
+  /* 负责流程图 */
+  .flow-viewport { background-image: none; }
+  .flow-scroll { background: var(--surface); }
+  .flow-links .flow-link--isr { stroke: rgba(var(--k-std), .55); }
+  .flow-node__n { background: var(--surface-2); border-color: var(--kc, var(--border)); }
+
+  .step-kind--isr { border-color: rgba(var(--k-std), .35); }
+  .step-kind--check { border-color: rgba(var(--k-violet), .35); }
+
+  /* 笔记 / 坑位 */
+  .pitfall { border-color: rgba(var(--k-std), .30); background: var(--surface); }
+
+  /* 搜索高亮 */
+  mark { background: rgba(var(--k-accent), .24); }
+
+  /* 知识库卡片 */
+  .kb-card__ico { background: var(--surface-2); border-color: var(--border); }
+  .kb-warn { background: rgba(var(--k-std), .07); }
+}
+
+/* ------------------------------------------------------------------
+   安卓壳（data-host="android"）：触屏专用微调
+   ------------------------------------------------------------------ */
+html[data-host="android"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 手机滚动靠系统惯性，不需要常驻滚动条（长条拇指在小屏上很碍眼） */
+html[data-host="android"] ::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* 内容区只在到达边界时才把滚动传给外层，避免整页跟着弹 */
+html[data-host="android"] .view {
+  overscroll-behavior-y: contain;
+}
+
+/* 流程图自己处理拖拽/捏合，别让浏览器抢手势去滚页面 */
+html[data-host="android"] .flow-viewport {
+  touch-action: none;
+}
+

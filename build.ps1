@@ -1,4 +1,4 @@
-<#
+﻿<#
     Build a single-file, self-contained Windows exe into .\dist
     Usage:  powershell -ExecutionPolicy Bypass -File .\build.ps1
 #>
@@ -19,8 +19,13 @@ if (-not (Get-Command dotnet -ErrorAction SilentlyContinue)) {
 
 Write-Host "Publishing $project ($Configuration / $Runtime) ..." -ForegroundColor Cyan
 
+# 只清本项目自己的发布产物；dist 里还有安卓包（build-android.ps1 的 STM32Atlas.apk），不能一起删
 if (Test-Path $output) {
-    Get-ChildItem $output -Force | Remove-Item -Recurse -Force
+    Get-ChildItem $output -Force -File | Where-Object {
+        $_.Name -like "STM32Atlas.*" -and $_.Extension -ne ".apk"
+    } | Remove-Item -Force
+    Get-ChildItem $output -Force -Directory | Where-Object { $_.Name -in @("ui", "lib") } |
+        Remove-Item -Recurse -Force
 }
 
 dotnet publish $project `

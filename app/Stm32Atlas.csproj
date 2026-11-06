@@ -5,6 +5,9 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <!-- 只为 FolderBrowserDialog 引入 WinForms；DPI 仍由 WPF 与 app.manifest 负责 -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
     <AssemblyName>STM32Atlas</AssemblyName>
     <RootNamespace>Stm32Atlas</RootNamespace>
     <Product>STM32 库字典</Product>

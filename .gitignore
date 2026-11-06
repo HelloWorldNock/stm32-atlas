@@ -8,11 +8,20 @@ dist/
 
 # 临时文件
 .tmp/
+.tmp-shots/
 *.tmp
 Thumbs.db
 desktop.ini
+
+# 安卓：签名密钥与构建中间产物（assets 由脚本复制到 %TEMP% 再打包，不入库）
+android/keystore/
+android/app/assets/
+android/build/
 
 # 原始素材（体积大，且为教程原始资料，不入库）
 STM32入门教程.pptx
 STM32入门教程.assets/
 md/
+
+# 模块资料：440 MB 原始文件，页面只读索引（app/ui/data/materials.js）
+模块资料/
