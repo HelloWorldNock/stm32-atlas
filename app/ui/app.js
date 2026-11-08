@@ -1,10 +1,8 @@
 import {
   FUNCTIONS, FUNCTION_MAP, WORKFLOWS, WORKFLOW_MAP, PERIPHERALS, PERIPH_MAP,
   PERIPH_COUNTS, EQUIVALENCES, FN_WORKFLOWS, STATS, searchAll,
-  KB_ARTICLES, KB_MAP, CASES, CASE_MAP, PINS, PIN_MAP, PIN_BY_GPIO,
-  MATERIAL_MODULES, MATERIAL_MAP
+  KB_ARTICLES, KB_MAP, CASES, CASE_MAP, PINS, PIN_MAP, PIN_BY_GPIO
 } from "./data/index.js";
-import { MATERIAL_NOTES } from "./data/material-notes.js";
 import { caseSources } from "./data/case-src.js";
 import { circuitSvg } from "./sim/sch.js";
 import { createModel, VDD } from "./sim/models.js";
@@ -154,7 +152,6 @@ const NAV = [
   ["functions", "book", "nav.functions", "#/functions"],
   ["workflows", "flow", "nav.workflows", "#/workflows"],
   ["cases", "flame", "nav.cases", "#/cases"],
-  ["materials", "folder", "nav.materials", "#/materials"],
   ["chip", "chip", "nav.chip", "#/chip"],
   ["kb", "layers", "nav.kb", "#/kb"],
   ["map", "map", "nav.map", "#/map"],
@@ -165,7 +162,6 @@ const NAV_COUNT = {
   functions: STATS.functions,
   workflows: STATS.workflows,
   cases: CASES.length,
-  materials: MATERIAL_MODULES.length,
   chip: PINS.length,
   kb: KB_ARTICLES.length,
   favorites: 0
@@ -277,13 +273,6 @@ function routeInfo() {
     const item = parts[1] ? CASE_MAP.get(decodeURIComponent(parts[1])) : null;
     return { ...base, name: "cases", caseItem: item || null, crumb: "nav.cases", crumbNow: item ? tx(item.title) : "" };
   }
-  if (head === "materials") {
-    const item = parts[1] ? (MATERIAL_MAP[decodeURIComponent(parts[1])] || null) : null;
-    return {
-      ...base, name: "materials", material: item || null, peripheral: item?.p || null,
-      crumb: "nav.materials", crumbNow: item ? tx(item.name) : ""
-    };
-  }
   if (head === "chip") {
     const key = parts[1] ? decodeURIComponent(parts[1]) : null;
     const pin = key ? (PIN_BY_GPIO[key] || PINS.find(p => p.name === key) || null) : null;
@@ -310,9 +299,6 @@ function render() {
   else if (route.name === "workflows") html = viewWorkflows(query);
   else if (route.name === "cases" && route.caseItem) html = viewCaseDetail(route.caseItem);
   else if (route.name === "cases") html = viewCases();
-  else if (route.name === "materials" && route.material) html = viewMaterialDetail(route.material);
-  else if (route.name === "materials" && parts[1]) html = viewNotFound();
-  else if (route.name === "materials") html = viewMaterials();
   else if (route.name === "chip") html = viewChip(route);
   else if (route.name === "kb" && route.kb) html = viewKbArticle(route.kb);
   else if (route.name === "kb") html = viewKb();
@@ -357,8 +343,6 @@ function render() {
     caseStart(route.caseItem);
   }
 
-  if (route.name === "materials") bindMaterialsUi();
-  if (route.material) recordRecent("material", route.material.id);
 
   if (route.wf) recordRecent("wf", route.wf.id);
   if (route.fn) recordRecent("fn", route.fn.id);
@@ -1753,273 +1737,6 @@ function viewKbArticle(a) {
 }
 
 /* ============================================================
-   模块资料（#/materials）
-   ============================================================ */
-
-const MAT_KIND = {
-  pdf: { icon: "book", key: "mat.kind.pdf" },
-  img: { icon: "spark", key: "mat.kind.img" },
-  doc: { icon: "list", key: "mat.kind.doc" },
-  pcb: { icon: "chip", key: "mat.kind.pcb" },
-  prog: { icon: "code", key: "mat.kind.prog" },
-  tool: { icon: "wrench", key: "mat.kind.tool" },
-  pack: { icon: "drive", key: "mat.kind.pack" },
-  other: { icon: "fileText", key: "mat.kind.other" },
-  dir: { icon: "folder", key: "mat.kind.dir" }
-};
-
-const matMeta = node => MAT_KIND[node.dir ? "dir" : (node.kind || "other")] || MAT_KIND.other;
-
-/* 桌面壳才有“打开真实文件”的能力，网页/安卓只给复制路径 */
-const isDesk = () => !!(window.chrome && window.chrome.webview);
-
-function fmtSize(bytes) {
-  const n = Number(bytes) || 0;
-  if (n >= 1073741824) return (n / 1073741824).toFixed(1) + " GB";
-  if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
-  if (n >= 1024) return Math.round(n / 1024) + " KB";
-  return n + " B";
-}
-
-/* data-mt：页内筛选用的检索串，统一小写 */
-const matHay = (...parts) => parts.flat().filter(Boolean).join(" ").toLowerCase();
-
-function matOpenBtn(path, isDir) {
-  const label = isDir ? t("mat.openRoot") : t("mat.open");
-  if (isDesk()) {
-    return `<button class="mat-open" type="button" data-open-path="${esc(path)}" data-open-kind="${isDir ? "dir" : "file"}"
-      title="${esc(label)}" aria-label="${esc(label)}">${icon("external")}</button>`;
-  }
-  return `<button class="mat-open" type="button" data-copy="${encodeURIComponent("模块资料/" + path)}"
-    title="${esc(t("mat.copyPath"))}" aria-label="${esc(t("mat.copyPath"))}">${icon("copy")}</button>`;
-}
-
-function matRow(node, sub = false) {
-  const meta = matMeta(node);
-  const tail = node.dir
-    ? `${node.files} ${t("mat.files")} · ${fmtSize(node.size)}`
-    : `${t(meta.key)} · ${fmtSize(node.size)}`;
-  return `<div class="mat-row ${sub ? "mat-row--sub" : ""}" data-mt="${esc(matHay(node.name))}">
-    <span class="mat-row__ico">${icon(meta.icon)}</span>
-    <span class="mat-row__name" title="${esc(node.name)}">${esc(node.name)}</span>
-    <span class="mat-row__meta">${esc(tail)}</span>
-    ${matOpenBtn(node.path, !!node.dir)}
-  </div>`;
-}
-
-function matNode(node) {
-  const kids = node.children || [];
-  if (!node.dir || !kids.length) return matRow(node);
-  const more = node.more
-    ? `<div class="mat-row mat-row--sub mat-row--more"><span class="mat-row__ico"></span><span class="mat-row__name">${t("mat.more", { n: node.more })}</span></div>`
-    : "";
-  return `<div class="mat-branch" data-mbranch>
-    ${matRow(node)}
-    <div class="mat-kids">${kids.map(kid => matRow(kid, true)).join("")}${more}</div>
-  </div>`;
-}
-
-function matCard(m) {
-  const accent = (m.p && PERIPH_MAP[m.p]?.accent) || "var(--accent)";
-  const names = m.resources.filter(r => !r.dir).slice(0, 3)
-    .map(r => `<span class="mat-file" title="${esc(r.name)}">${esc(r.name)}</span>`).join("");
-  const hay = matHay(tx(m.name), alt(m.name), m.code, m.tags, m.resources.map(r => r.name), m.dir);
-  return `<a class="mat-card" href="#/materials/${encodeURIComponent(m.id)}" style="--mc:${accent}" data-mt="${esc(hay)}">
-    <span class="mat-card__top">
-      <span class="mat-card__ico">${icon(m.icon || "folder")}</span>
-      <span class="mat-card__no">${String(m.no).padStart(2, "0")}</span>
-      <span class="mat-card__code">${esc(m.code)}</span>
-    </span>
-    <h3>${esc(tx(m.name))}</h3>
-    <p>${esc(tx(m.summary))}</p>
-    ${names ? `<span class="mat-card__files">${names}</span>` : ""}
-    <span class="mat-card__meta">${icon("folder")}${m.files} ${t("mat.files")} · ${fmtSize(m.size)}</span>
-  </a>`;
-}
-
-function viewMaterials() {
-  const files = MATERIAL_MODULES.reduce((n, m) => n + m.files, 0);
-  const size = MATERIAL_MODULES.reduce((n, m) => n + m.size, 0);
-  const strip = isDesk()
-    ? `<div class="mat-root" id="matRoot">${icon("drive")}<span>${t("mat.rootUnknown")}</span>
-        <button class="btn btn--sm" type="button" data-open-root="pick">${t("mat.pickRoot")}</button></div>`
-    : `<div class="mat-root" id="matRoot">${icon("info")}<span>${t("mat.webNote")}</span></div>`;
-
-  return `
-  <div class="kb-hero">
-    <div class="doc-head__eyebrow">${icon("folder")}${t("nav.materials")}</div>
-    <h1 class="doc-head__title">${t("mat.title")}</h1>
-    <p class="doc-head__goal">${t("mat.lead")}</p>
-    <div class="doc-head__meta">
-      <span class="badge badge--count">${MATERIAL_MODULES.length} ${t("mat.count")}</span>
-      <span class="badge badge--count">${files} ${t("mat.files")}</span>
-      <span class="badge badge--count">${fmtSize(size)}</span>
-    </div>
-    ${strip}
-  </div>
-  ${matFilterBar()}
-  <div class="mat-grid" id="matGrid">${MATERIAL_MODULES.map(matCard).join("")}</div>
-  <div class="empty is-hidden" id="matEmpty">${icon("search")}<h3>${t("mat.empty")}</h3><p>${t("mat.emptyHint")}</p></div>
-  <div class="search-hints" style="margin-top:18px">${icon("info")} ${t("mat.sourceNote")}</div>`;
-}
-
-function matFilterBar() {
-  return `<div class="mat-bar">
-    <label class="mat-search">${icon("search")}
-      <input id="matFilter" type="search" autocomplete="off" spellcheck="false"
-        placeholder="${esc(t("mat.filterPlaceholder"))}" aria-label="${esc(t("mat.filterPlaceholder"))}">
-    </label>
-    <span class="mat-count" id="matCount"></span>
-  </div>`;
-}
-
-/* 阅读笔记：从 模块资料 的 PDF / doc / 接线图里读出来、重新整理的参数与用法 */
-function matNoteBlock(m) {
-  const note = MATERIAL_NOTES[m.id];
-  if (!note) return "";
-  const L = v => (typeof v === "string" ? v : tx(v));
-
-  const specs = (note.specs || []).map(([k, v]) => `
-    <div class="mat-spec"><span class="mat-spec__k">${esc(L(k))}</span><span class="mat-spec__v">${esc(L(v))}</span></div>`).join("");
-  const pins = (note.pins || []).map(([k, v]) => `
-    <div class="mat-pin"><span class="mat-pin__n">${esc(L(k))}</span><span class="mat-pin__d">${esc(L(v))}</span></div>`).join("");
-  const steps = (note.steps || []).map(s => `<li>${esc(L(s))}</li>`).join("");
-  const cautions = (note.cautions || []).map(s => `<div class="pitfall">${icon("alert")}<p>${esc(L(s))}</p></div>`).join("");
-  const sources = (note.sources || []).map(s => `
-    <li><code>${esc(s.file)}</code><span>${esc(L(s.hint))}</span></li>`).join("");
-
-  return `
-  <section class="doc-panel mat-notes">
-    <div class="doc-panel__head">${icon("book")}
-      <span class="doc-panel__title">${t("mat.notesTitle")}</span>
-      <span class="badge badge--count">${t("mat.notesBadge")}</span>
-    </div>
-    <div class="doc-panel__body">
-      <p class="mat-note__lead">${esc(L(note.takeaway))}</p>
-      <div class="mat-note__grid">
-        ${specs ? `<div class="mat-note__col">
-          <div class="mat-note__title">${t("mat.specs")}</div>
-          <div class="mat-specs">${specs}</div>
-        </div>` : ""}
-        ${pins ? `<div class="mat-note__col">
-          <div class="mat-note__title">${t("mat.pins")}</div>
-          <div class="mat-pins">${pins}</div>
-        </div>` : ""}
-      </div>
-      ${steps ? `<div class="mat-note__title">${t("mat.steps")}</div><ol class="mat-steps">${steps}</ol>` : ""}
-      ${cautions ? `<div class="mat-note__title">${t("mat.cautions")}</div><div class="pitfall-list">${cautions}</div>` : ""}
-      ${sources ? `<div class="mat-note__title">${t("mat.sources")}</div><ul class="mat-sources">${sources}</ul>` : ""}
-    </div>
-  </section>`;
-}
-
-function viewMaterialDetail(m) {
-  const flows = (m.workflows || []).map(id => WORKFLOW_MAP[id]).filter(Boolean);
-  const cases = (m.cases || []).map(id => CASE_MAP.get(id)).filter(Boolean);
-  const articles = (m.kb || []).map(id => KB_MAP[id]).filter(Boolean);
-  const kinds = Object.entries(m.kinds || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-  const rootPath = "模块资料/" + m.dir;
-
-  const openDir = isDesk()
-    ? `<button class="btn btn--sm" type="button" data-open-path="${esc(m.dir)}" data-open-kind="dir">
-        ${icon("external")}${t("mat.openRoot")}</button>`
-    : `<button class="btn btn--sm" type="button" data-copy="${encodeURIComponent(rootPath)}">
-        ${icon("copy")}${t("mat.copyPath")}</button>`;
-
-  const side = [
-    `<div class="kb-side__card">
-      <div class="kb-side__title">${t("mat.root")}</div>
-      <div class="kb-side__link">${icon("folder")}<span class="mat-side__path" title="${esc(rootPath)}">${esc(rootPath)}</span></div>
-      <div class="mat-side__row">${openDir}</div>
-    </div>`,
-    kinds.length ? `<div class="kb-side__card">
-      <div class="kb-side__title">${t("mat.contents")}</div>
-      ${kinds.map(([kind, n]) => `<div class="kb-side__link">${icon(MAT_KIND[kind]?.icon || "fileText")}
-        <span>${t(MAT_KIND[kind]?.key || "mat.kind.other")}</span><span class="mat-side__n">${n}</span></div>`).join("")}
-    </div>` : "",
-    cases.length ? `<div class="kb-side__card">
-      <div class="kb-side__title">${t("mat.relatedCases")}</div>
-      ${cases.map(c => `<a class="kb-side__link" href="#/cases/${encodeURIComponent(c.id)}">${icon("flame")}<span>${esc(tx(c.title))}</span></a>`).join("")}
-    </div>` : "",
-    flows.length ? `<div class="kb-side__card">
-      <div class="kb-side__title">${t("mat.relatedFlows")}</div>
-      ${flows.map(w => `<a class="kb-side__link" href="${wfHref(w.id)}">${icon("flow")}<span>${esc(tx(w.title))}</span></a>`).join("")}
-    </div>` : "",
-    articles.length ? `<div class="kb-side__card">
-      <div class="kb-side__title">${t("mat.relatedKb")}</div>
-      ${articles.map(a => `<a class="kb-side__link" href="#/kb/${encodeURIComponent(a.id)}">${icon("book")}<span>${esc(tx(a.title))}</span></a>`).join("")}
-    </div>` : ""
-  ].filter(Boolean).join("");
-
-  return `
-  <a class="backlink" href="#/materials">${icon("arrowLeft")}${t("mat.back")}</a>
-  <div class="detail-head">
-    <div class="detail-head__main">
-      <div class="detail-head__tags">
-        ${m.p ? pchip(m.p) : ""}
-        <span class="badge badge--count">${String(m.no).padStart(2, "0")} · ${esc(m.code)}</span>
-        <span class="badge badge--count">${m.files} ${t("mat.files")} · ${fmtSize(m.size)}</span>
-      </div>
-      <h1 class="title-sans">${esc(tx(m.name))}</h1>
-      <div class="wf-head__alt">${esc(alt(m.name))}</div>
-      <p class="wf-head__goal">${esc(tx(m.summary))}</p>
-      <div class="mat-tags">${(m.tags || []).map(tag => `<span class="badge">${esc(tag)}</span>`).join("")}</div>
-    </div>
-    <div class="detail-head__actions"></div>
-  </div>
-
-  <div class="mat-article">
-    <div class="mat-main">
-      ${matNoteBlock(m)}
-      ${matFilterBar()}
-      <div class="mat-tree">${m.resources.map(matNode).join("")}</div>
-      ${m.resources.length ? "" : `<div class="empty">${icon("folder")}<h3>${t("mat.emptyDir")}</h3></div>`}
-      <div class="empty is-hidden" id="matEmpty">${icon("search")}<h3>${t("mat.empty")}</h3><p>${t("mat.emptyHint")}</p></div>
-    </div>
-    <aside class="kb-side">${side}</aside>
-  </div>`;
-}
-
-function bindMaterialsUi() {
-  const box = $("#matFilter");
-  const apply = () => {
-    const q = box ? box.value.trim().toLowerCase() : "";
-    view.querySelectorAll("[data-mt]").forEach(el => {
-      el.classList.toggle("is-hidden", !!q && !el.dataset.mt.includes(q));
-    });
-    view.querySelectorAll("[data-mbranch]").forEach(branch => {
-      const any = [...branch.querySelectorAll("[data-mt]")].some(el => !el.classList.contains("is-hidden"));
-      branch.classList.toggle("is-hidden", !any);
-    });
-    const hits = [...view.querySelectorAll("[data-mt]")].filter(el => el.offsetParent !== null).length;
-    const count = $("#matCount");
-    if (count) count.textContent = q ? t("mat.hits", { n: hits }) : "";
-    const empty = $("#matEmpty");
-    if (empty) empty.classList.toggle("is-hidden", hits > 0);
-  };
-  if (box) {
-    box.addEventListener("input", apply);
-    if (box.value) apply();
-  }
-  if (isDesk()) postHost({ type: "materials-probe" });
-}
-
-/* 宿主回报资料根目录：成功显示路径 + 打开/更换，失败提示去选目录 */
-function applyMaterialsInfo(msg) {
-  const root = $("#matRoot");
-  if (!root) return;
-  if (msg.ok && msg.root) {
-    root.innerHTML = `${icon("check")}
-      <span class="mat-root__path" title="${esc(msg.root)}">${esc(msg.root)}</span>
-      <button class="btn btn--sm" type="button" data-open-root="1">${t("mat.openRoot")}</button>
-      <button class="btn btn--sm btn--ghost" type="button" data-open-root="pick">${t("mat.relocate")}</button>`;
-  } else {
-    root.innerHTML = `${icon("alert")}<span>${t("mat.rootHint")}</span>
-      <button class="btn btn--sm" type="button" data-open-root="pick">${t("mat.pickRoot")}</button>`;
-  }
-}
-
-/* ============================================================
    search
    ============================================================ */
 function hilite(text, tokens) {
@@ -2047,7 +1764,7 @@ function viewSearch(rawQuery) {
   }
 
   const total = result.functions.length + result.workflows.length + result.peripherals.length
-    + (result.kb?.length || 0) + (result.materials?.length || 0);
+    + (result.kb?.length || 0);
   if (!total) {
     return `<div class="page-head">
       <div class="eyebrow">${t("top.search")}</div>
@@ -2069,16 +1786,6 @@ function viewSearch(rawQuery) {
 
   ${(result.kb || []).length ? `<div class="sec-head"><h2>${t("search.kb")}</h2><span class="sec-head__meta">${result.kb.length}</span></div>
     <div class="kb-grid">${result.kb.map(a => kbCard(a)).join("")}</div>` : ""}
-
-  ${(result.materials || []).length ? `<div class="sec-head"><h2>${t("search.materials")}</h2><span class="sec-head__meta">${result.materials.length}</span></div>
-    <div class="fn-list">${result.materials.map(m => `
-      <a class="fn-row hit" href="#/materials/${encodeURIComponent(m.id)}">
-        <span class="fn-row__main">
-          <span class="fn-row__title"><span class="fn-row__name">${hilite(tx(m.name), result.tokens)}</span><span class="badge badge--count">${esc(m.code)}</span></span>
-          <span class="fn-row__brief">${hilite(tx(m.summary), result.tokens)}</span>
-        </span>
-        <span class="fn-row__meta">${icon("folder")}${m.files} ${t("mat.files")}${icon("chevronRight")}</span>
-      </a>`).join("")}</div>` : ""}
 
   ${result.functions.length ? `<div class="sec-head"><h2>${t("search.functions")}</h2><span class="sec-head__meta">${result.functions.length}</span></div>
     <div class="fn-list" id="searchHits">${result.functions.map(f => `
@@ -2147,18 +1854,6 @@ document.addEventListener("click", event => {
     updateFavButtons(key, on);
     toast(on ? t("toast.favAdded") : t("toast.favRemoved"));
     if (routeInfo().name === "favorites") render();
-    return;
-  }
-
-  const openPath = event.target.closest("[data-open-path]");
-  if (openPath) {
-    postHost({ type: "open-path", path: openPath.dataset.openPath, kind: openPath.dataset.openKind || "file" });
-    return;
-  }
-
-  const openRoot = event.target.closest("[data-open-root]");
-  if (openRoot) {
-    postHost({ type: "open-root", pick: openRoot.dataset.openRoot === "pick" });
     return;
   }
 
@@ -2451,14 +2146,6 @@ function miniResults(query, lang) {
       href: "#/kb/" + encodeURIComponent(a.id)
     });
   }
-  for (const m of (res.materials || []).slice(0, 3)) {
-    items.push({
-      kind: "material",
-      title: miniCut(miniText(m.name, lang), 40),
-      sub: miniCut(miniText(m.summary, lang)),
-      href: "#/materials/" + encodeURIComponent(m.id)
-    });
-  }
   if (items.length < 8) {
     const needle = q.toLowerCase();
     for (const c of CASES) {
@@ -2487,10 +2174,6 @@ if (hostBridge) {
       postHost({ type: "mini-result", id: msg.id, items });
     } else if (msg.type === "mini-open" && msg.href) {
       location.hash = msg.href;
-    } else if (msg.type === "materials-info") {
-      applyMaterialsInfo(msg);
-    } else if (msg.type === "open-result" && msg.ok === false) {
-      toast(t("mat.openFail"));
     }
   });
 

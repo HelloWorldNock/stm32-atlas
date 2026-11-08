@@ -48,10 +48,7 @@ const P = {
   trash: '<path d="M4 7h16M9.5 7V4.8h5V7M6.5 7l1 13h9l1-13"/><path d="M10 11v6M14 11v6"/>',
   flame: '<path d="M12 3s5.2 4.6 5.2 9a5.2 5.2 0 0 1-10.4 0c0-2.1 1-3.7 2.6-5.2.3 1.5 1 2.4 2.1 2.7C11 6.7 11.5 4.6 12 3z"/>',
   gauge: '<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4.2-5.6"/><circle cx="12" cy="18" r="1.3"/>',
-  terminal: '<rect x="3" y="4.5" width="18" height="15" rx="2.2"/><path d="m7.5 9.5 3 2.8-3 2.8M13 15.2h3.6"/>',
-  folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
-  fileText: '<path d="M14 3H7.5A2.5 2.5 0 0 0 5 5.5v13A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
-  external: '<path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14.5V19a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 19V7.5A1.5 1.5 0 0 1 5.5 6H10"/>'
+  terminal: '<rect x="3" y="4.5" width="18" height="15" rx="2.2"/><path d="m7.5 9.5 3 2.8-3 2.8M13 15.2h3.6"/>'
 };
 
 export function icon(name, cls = "") {
