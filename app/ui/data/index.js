@@ -10,6 +10,7 @@ import { KB_ARTICLES } from "./kb.js";
 import { CASES, CASE_MAP } from "./cases.js";
 import { PINS, PIN_MAP, PIN_BY_GPIO } from "./pins.js";
 import { MATERIAL_MODULES, MATERIAL_MAP } from "./materials.js";
+import { MATERIAL_NOTES } from "./material-notes.js";
 
 export { PERIPHERALS, PERIPH_MAP };
 export { KB_ARTICLES, CASES, CASE_MAP };
@@ -128,6 +129,17 @@ const kbFields = a => [
 /* 资料按“模块名 → 顶层文件名 → 标签”给权重，文件名权重最高：查 “TCRT5000” 直接命中 */
 const matFileNames = m => m.resources.map(r => r.name).join(" ");
 
+/* 阅读笔记里的参数/引脚/要点也参与检索，这样 “0x78”“STBY” 这类词能直接搜到模块 */
+const matNoteText = m => {
+  const n = MATERIAL_NOTES[m.id];
+  if (!n) return "";
+  const flat = v => (typeof v === "string" ? v : [v?.zh, v?.en].filter(Boolean).join(" "));
+  const parts = [flat(n.takeaway)];
+  for (const [k, v] of [...(n.specs || []), ...(n.pins || [])]) parts.push(flat(k), flat(v));
+  for (const s of [...(n.steps || []), ...(n.cautions || [])]) parts.push(flat(s));
+  return parts.join(" ");
+};
+
 const matFields = m => [
   [m.code, 7],
   [m.dir, 7],
@@ -135,6 +147,7 @@ const matFields = m => [
   [m.name.en, 7],
   [(m.tags || []).join(" "), 6],
   [matFileNames(m), 5],
+  [matNoteText(m), 4],
   [m.summary.zh, 2],
   [m.summary.en, 1]
 ];

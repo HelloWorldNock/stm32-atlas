@@ -4,6 +4,7 @@ import {
   KB_ARTICLES, KB_MAP, CASES, CASE_MAP, PINS, PIN_MAP, PIN_BY_GPIO,
   MATERIAL_MODULES, MATERIAL_MAP
 } from "./data/index.js";
+import { MATERIAL_NOTES } from "./data/material-notes.js";
 import { caseSources } from "./data/case-src.js";
 import { circuitSvg } from "./sim/sch.js";
 import { createModel, VDD } from "./sim/models.js";
@@ -1872,6 +1873,46 @@ function matFilterBar() {
   </div>`;
 }
 
+/* 阅读笔记：从 模块资料 的 PDF / doc / 接线图里读出来、重新整理的参数与用法 */
+function matNoteBlock(m) {
+  const note = MATERIAL_NOTES[m.id];
+  if (!note) return "";
+  const L = v => (typeof v === "string" ? v : tx(v));
+
+  const specs = (note.specs || []).map(([k, v]) => `
+    <div class="mat-spec"><span class="mat-spec__k">${esc(L(k))}</span><span class="mat-spec__v">${esc(L(v))}</span></div>`).join("");
+  const pins = (note.pins || []).map(([k, v]) => `
+    <div class="mat-pin"><span class="mat-pin__n">${esc(L(k))}</span><span class="mat-pin__d">${esc(L(v))}</span></div>`).join("");
+  const steps = (note.steps || []).map(s => `<li>${esc(L(s))}</li>`).join("");
+  const cautions = (note.cautions || []).map(s => `<div class="pitfall">${icon("alert")}<p>${esc(L(s))}</p></div>`).join("");
+  const sources = (note.sources || []).map(s => `
+    <li><code>${esc(s.file)}</code><span>${esc(L(s.hint))}</span></li>`).join("");
+
+  return `
+  <section class="doc-panel mat-notes">
+    <div class="doc-panel__head">${icon("book")}
+      <span class="doc-panel__title">${t("mat.notesTitle")}</span>
+      <span class="badge badge--count">${t("mat.notesBadge")}</span>
+    </div>
+    <div class="doc-panel__body">
+      <p class="mat-note__lead">${esc(L(note.takeaway))}</p>
+      <div class="mat-note__grid">
+        ${specs ? `<div class="mat-note__col">
+          <div class="mat-note__title">${t("mat.specs")}</div>
+          <div class="mat-specs">${specs}</div>
+        </div>` : ""}
+        ${pins ? `<div class="mat-note__col">
+          <div class="mat-note__title">${t("mat.pins")}</div>
+          <div class="mat-pins">${pins}</div>
+        </div>` : ""}
+      </div>
+      ${steps ? `<div class="mat-note__title">${t("mat.steps")}</div><ol class="mat-steps">${steps}</ol>` : ""}
+      ${cautions ? `<div class="mat-note__title">${t("mat.cautions")}</div><div class="pitfall-list">${cautions}</div>` : ""}
+      ${sources ? `<div class="mat-note__title">${t("mat.sources")}</div><ul class="mat-sources">${sources}</ul>` : ""}
+    </div>
+  </section>`;
+}
+
 function viewMaterialDetail(m) {
   const flows = (m.workflows || []).map(id => WORKFLOW_MAP[id]).filter(Boolean);
   const cases = (m.cases || []).map(id => CASE_MAP.get(id)).filter(Boolean);
@@ -1929,6 +1970,7 @@ function viewMaterialDetail(m) {
 
   <div class="mat-article">
     <div class="mat-main">
+      ${matNoteBlock(m)}
       ${matFilterBar()}
       <div class="mat-tree">${m.resources.map(matNode).join("")}</div>
       ${m.resources.length ? "" : `<div class="empty">${icon("folder")}<h3>${t("mat.emptyDir")}</h3></div>`}

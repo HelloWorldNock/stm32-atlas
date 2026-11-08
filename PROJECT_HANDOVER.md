@@ -113,6 +113,7 @@
          ├─ cases.js          # 14 个江协案例：电路/控件/读数/模型/讲解/判据
          ├─ case-src.js       # 案例源码（gen-case-src.py 抽取）
          ├─ materials.js      # 14 个模块资料索引（gen-materials.py 生成）
+         ├─ material-notes.js # 14 篇阅读笔记：参数 / 引脚 / 要点 / 坑 / 出处（人工整理）
          └─ index.js          # 聚合、对照表、反查索引、搜索、审计
 ```
 
@@ -135,6 +136,7 @@
 | `data/case-src.js` | 案例源码（`CASE_SOURCES` + `caseSources(folder, files)`），由 `gen-case-src.py` 从教程工程抽取，勿手改。 |
 | `data/materials.js` | 14 个模块资料的索引（`MATERIAL_MODULES`/`MATERIAL_MAP`/`MATERIAL_STATS`）：模块名与摘要（中英）、标签、关联的案例/流程/知识点、工作量与体积、两层目录树。由 `gen-materials.py` 生成，勿手改；模块文案写在脚本的 `MODULES` 表里。 |
 | `MaterialsRoot.cs` | 资料根目录发现（`%LOCALAPPDATA%\Stm32Atlas\materials.json` → `STM32ATLAS_MATERIALS` 环境变量 → 从 exe/当前目录向上 6 级找 `模块资料`），`Pick()` 用 WinForms `FolderBrowserDialog` 选目录，`TryResolve()` 把相对路径拼成绝对路径并挡住越界，`Open()` 用 `ShellExecute` 打开文件/文件夹。 |
+| `data/material-notes.js` | 14 篇阅读笔记（`MATERIAL_NOTES[id]`）：`takeaway` 一句话结论、`specs` 关键参数、`pins` 接口定义、`steps` 使用要点、`cautions` 注意事项、`sources` 原文出处（文件名 + 说明）。内容从 `模块资料\` 的 PDF / doc / 接线图里读出来手写整理，不是生成物；模块详情页的「资料摘要」和搜索权重都吃这份数据。 |
 | `data/kb.js` | 7 篇硬件知识文章：段落 / 列表 / 公式 / 警告块 + 教程页码。 |
 | `data/index.js` | 聚合数据 + 完整性审计（`FUNCTION_MAP`/`WORKFLOW_MAP`/`EQUIVALENCES`/`FN_WORKFLOWS`，以及知识/案例/引脚的 dangling 引用）。 |
 | `tools/data-selftest.mjs` | 零依赖数据自测：函数与流程引用、知识结构、案例电路/控件/读数/模型/源码、48 引脚自洽、14 个模块资料索引（关联 id 可解析、资源路径前缀），并渲染电路图确认无 `undefined`/`NaN`。 |
@@ -347,9 +349,20 @@ wf({
 - 页面：`#/materials` 列表（`matCard`），`#/materials/<id>` 详情（`matNode` 渲染树、`bindMaterialsUi` 做页内筛选，`[data-mt]` 存小写检索串，`[data-mbranch]` 无可见子项时整枝隐藏）。
 - 打开文件：桌面版页面发 `open-path`，`MaterialsRoot.TryResolve()` 拼绝对路径后经 `Path.GetFullPath` 前缀校验确保仍在根内（挡住 `..` 越界），再 `Process.Start(UseShellExecute)`；网页 / 安卓没有宿主，按钮降级为复制相对路径。
 
+#### 阅读笔记（data/material-notes.js）
+
+索引只能说“这个模块有什么文件”，所以每个模块另配一篇**读原文后整理的笔记**，在详情页顶部渲染成「资料摘要」面板：
+
+- `takeaway`：一句话结论（接线极性、通信参数这类最要紧的事），排在面板最上面；
+- `specs` / `pins`：关键参数与接口定义，两张两列表；参数一律写资料的额定值（电压、电流、量程、槽宽、分辨率……），资料里没有的数字不写；
+- `steps` / `cautions`：使用步骤与容易踩的坑（例如“有源蜂鸣器是低电平触发”“对射式无遮挡输出低、反射式相反”“W25Q 跨页写会回卷”）；
+- `sources`：每条结论对应的原文件名 + 一句说明，自测会核对文件确实在 `模块资料\` 里。
+
+笔记同时参与全局搜索（`data/index.js` 的 `matFields` 把笔记正文按权重 4 计入），所以搜 `0x78`、`STBY`、`TCRT5000` 都能落到对应模块。新增模块时要同时补索引与笔记。
+
 ### 验证
 
-- `node tools\data-selftest.mjs`：**4166 项断言**，覆盖函数/流程引用、7 篇知识的块结构与页码、14 个案例的电路/控件/读数/模型/源码、48 个引脚的自洽性、14 个模块资料索引（id 唯一、序号单调、资源路径前缀、类别取值、关联 id 可解析，`模块资料` 存在时还检查目录真的在盘上），并渲染一遍电路图与 48 个引脚图确认没有 `undefined` / `NaN`，以及「案例不再残留旧功能字段」的回归检查。
+- `node tools\data-selftest.mjs`：**5144 项断言**，覆盖函数/流程引用、7 篇知识的块结构与页码、14 个案例的电路/控件/读数/模型/源码、48 个引脚的自洽性、14 个模块资料索引（id 唯一、序号单调、资源路径前缀、类别取值、关联 id 可解析，`模块资料` 存在时还检查目录真的在盘上）、14 篇阅读笔记（结论/参数/引脚/要点/坑/出处齐全，出处文件能在盘上找到），并渲染一遍电路图与 48 个引脚图确认没有 `undefined` / `NaN`，以及「案例不再残留旧功能字段」的回归检查。
 - 浏览器端（Edge + CDP）28 项端到端断言：导航 8 项（含引脚图）、案例 14 张卡、案例页电路 SVG / 引脚热点 / 读数 / 源码标签 / 运行与按住按钮、按键改变读数、滑杆改变 ADC 读数、串口表单收发、引脚图 48 个热点与占用高亮、`#/chip/PA9` 详情、点引脚切详情、`#/sim` 与 `#/build` 回落、主题切换、控制台无报错。
 
 ---
@@ -478,7 +491,7 @@ fn({
 python tools\gen-pins.py        # 引脚定义 xlsx → app\ui\data\pins.js
 python tools\gen-case-src.py    # 教程工程 → app\ui\data\case-src.js
 python tools\gen-materials.py   # 模块资料\ → app\ui\data\materials.js
-node tools\data-selftest.mjs    # 4166 项断言
+node tools\data-selftest.mjs    # 5144 项断言
 ```
 
 ---
@@ -517,6 +530,7 @@ node tools\data-selftest.mjs    # 4166 项断言
 - 安卓版共用同一套界面文件（`app/ui`），改动后要 exe 和 APK 各自重新构建。它跑在系统 WebView 里：老引擎（Chromium ≤110）不支持 `color-mix()`，`app/ui/compat.css` 在检测到缺支持时接管配色与半透明层；新增依赖 `color-mix()` 的样式时顺手补一条兜底，否则老手机上那条声明会被整条丢弃。主题与状态栏图标明暗通过 `AtlasAndroid` 接口回传，`html[data-host="android"]` 用于触屏微调。
 - APK 不申请任何权限、不联网。页面由 `WebViewClient.shouldInterceptRequest` 从 `assets\ui` 以 `https://atlas.local` 这个虚拟 origin 流式返回，不能用 `file://`：`file://` 下 `type="module"` 的脚本会被 CORS 拦掉。
 - 资料查询只读索引：`data/materials.js` 是 `tools/gen-materials.py` 的生成物，原始文件不入库；`模块资料\` 缺失时页面显示「未找到资料目录」，可用按钮重新指定并记忆到 `%LOCALAPPDATA%\Stm32Atlas\materials.json`。网页 / 安卓版没有宿主桥，只能复制相对路径。
+- 阅读笔记（`data/material-notes.js`）是**人工整理**的，不是从 PDF 自动抽取：数值取自资料里的额定值，资料没写的参数不补；资料改版后要人工核对一遍，标注的出处文件名也跟着改。
 
 ---
 
@@ -533,10 +547,11 @@ node tools\data-selftest.mjs    # 4166 项断言
 | `android\` | 安卓壳源码：manifest、`MainActivity.java`、res（图标 / 应用名 / 主题） |
 | `tools/gen-android-icon.py` | 生成安卓启动器图标 |
 | `app\ui\compat.css` | 老 WebView 的 `color-mix()` 兜底 + 安卓触屏微调 |
-| `tools/data-selftest.mjs` | 函数/流程/知识/案例/引脚/资料索引数据自测（4166 项断言） |
+| `tools/data-selftest.mjs` | 函数/流程/知识/案例/引脚/资料索引/阅读笔记数据自测（5144 项断言） |
 | `tools/gen-pins.py` | 从引脚定义 xlsx 生成 `app/ui/data/pins.js` |
 | `tools/gen-case-src.py` | 从教程工程抽取源码，生成 `app/ui/data/case-src.js` |
 | `tools/gen-materials.py` | 从 `模块资料\` 生成 `app/ui/data/materials.js` |
+| `app\ui\data\material-notes.js` | 14 篇人工整理的模块阅读笔记（参数/引脚/要点/坑/出处） |
 | `app\` | Debug 源码 + UI 资源（含 woff2 字体） |
 
 ---

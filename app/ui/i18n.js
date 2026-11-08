@@ -254,7 +254,14 @@ export const STR = {
   "mat.kind.tool": { zh: "工具", en: "Tool" },
   "mat.kind.pack": { zh: "压缩包", en: "Archive" },
   "mat.kind.other": { zh: "文件", en: "File" },
-  "mat.kind.dir": { zh: "文件夹", en: "Folder" }
+  "mat.kind.dir": { zh: "文件夹", en: "Folder" },
+  "mat.notesTitle": { zh: "资料摘要", en: "Digest" },
+  "mat.notesBadge": { zh: "读自原文", en: "From the docs" },
+  "mat.specs": { zh: "关键参数", en: "Key specs" },
+  "mat.pins": { zh: "接口与引脚", en: "Pins" },
+  "mat.steps": { zh: "使用要点", en: "How to use" },
+  "mat.cautions": { zh: "注意事项", en: "Watch out" },
+  "mat.sources": { zh: "原文出处", en: "Sources" }
 };
 
 export function makeT(lang) {

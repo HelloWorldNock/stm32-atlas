@@ -12,7 +12,7 @@
     <RootNamespace>Stm32Atlas</RootNamespace>
     <Product>STM32 库字典</Product>
     <AssemblyTitle>STM32 库字典 · Library Atlas</AssemblyTitle>
-    <Version>1.0.0</Version>
+    <Version>1.2.0</Version>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

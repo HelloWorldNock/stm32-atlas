@@ -786,8 +786,8 @@ export const MATERIAL_MODULES = [
   "en": "Active buzzer module"
  },
  "summary": {
-  "zh": "有源蜂鸣器模块的原理图与实物图。有源模块自带振荡源，控制端给电平就发声，对应案例里的蜂鸣器演示。",
-  "en": "Schematic and photo of the active buzzer module. An active module carries its own oscillator, so a logic level on the control pin makes it sound — see the buzzer case."
+  "zh": "有源蜂鸣器模块的原理图与实物图：S8550 三极管开关，控制端低电平导通、高电平停止，自带振荡源所以不需要 PWM 频率。",
+  "en": "Schematic and photo of the active buzzer module: an S8550 switch turns it on at a low level. It oscillates internally, so no drive frequency is needed."
  },
  "tags": [
   "蜂鸣器",

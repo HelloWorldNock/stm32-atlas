@@ -11,6 +11,7 @@ import { CASES, CASE_MAP } from "../app/ui/data/cases.js";
 import { KB_ARTICLES, KB_MAP } from "../app/ui/data/kb.js";
 import { PINS, PIN_MAP, PIN_BY_GPIO } from "../app/ui/data/pins.js";
 import { MATERIAL_MODULES } from "../app/ui/data/materials.js";
+import { MATERIAL_NOTES } from "../app/ui/data/material-notes.js";
 import { caseSources } from "../app/ui/data/case-src.js";
 import { circuitSvg } from "../app/ui/sim/sch.js";
 import { createModel } from "../app/ui/sim/models.js";
@@ -315,6 +316,68 @@ for (const m of MATERIAL_MODULES) {
 const matHit = searchAll("OLED");
 ok("搜索命中资料模块", (matHit.materials || []).length > 0, String((matHit.materials || []).length));
 ok("搜索资料带 code", !!(matHit.materials || [])[0]?.code);
+
+/* ---- 阅读笔记：每个模块都要有，并且能落到原文 ---- */
+
+const matText = v => (typeof v === "string" ? v : v?.zh);
+const matTextEn = v => (typeof v === "string" ? v : v?.en);
+const matFilesIn = dir => {
+  if (!matOnDisk) return null;
+  const base = join(matRoot, dir);
+  const names = new Set();
+  const walkDir = p => {
+    for (const entry of readdirSync(p, { withFileTypes: true })) {
+      const full = join(p, entry.name);
+      if (entry.isDirectory()) walkDir(full);
+      else names.add(entry.name);
+    }
+  };
+  try { walkDir(base); } catch { return null; }
+  return names;
+};
+
+for (const m of MATERIAL_MODULES) {
+  const note = MATERIAL_NOTES[m.id];
+  ok(`资料笔记存在：${m.id}`, !!note);
+  if (!note) continue;
+
+  bil(`资料笔记结论：${m.id}`, note.takeaway, 12, 12);
+
+  ok(`资料参数表：${m.id}`, Array.isArray(note.specs) && note.specs.length >= 3, String(note.specs?.length));
+  for (const [i, row] of (note.specs || []).entries()) {
+    ok(`参数行成对：${m.id} #${i + 1}`, Array.isArray(row) && row.length === 2, JSON.stringify(row));
+    ok(`参数名非空：${m.id} #${i + 1}`, isText(matText(row[0])), String(matText(row[0])));
+    ok(`参数值非空：${m.id} #${i + 1}`, isText(matText(row[1])), String(matText(row[1])));
+    ok(`参数值有英文：${m.id} #${i + 1}`, isText(matTextEn(row[1])), String(matTextEn(row[1])));
+  }
+
+  ok(`资料引脚表：${m.id}`, Array.isArray(note.pins) && note.pins.length >= 3, String(note.pins?.length));
+  for (const [i, row] of (note.pins || []).entries()) {
+    ok(`引脚行成对：${m.id} #${i + 1}`, Array.isArray(row) && row.length === 2, JSON.stringify(row));
+    isText(matText(row[0])) ? pass++ : fails.push(`引脚名非空：${m.id} #${i + 1}`);
+    isText(matText(row[1])) ? pass++ : fails.push(`引脚说明非空：${m.id} #${i + 1}`);
+  }
+
+  ok(`资料使用要点：${m.id}`, (note.steps || []).length >= 3, String(note.steps?.length));
+  for (const [i, s] of (note.steps || []).entries()) bil(`使用要点 ${m.id} #${i + 1}`, s, 10, 10);
+
+  ok(`资料注意事项：${m.id}`, (note.cautions || []).length >= 2, String(note.cautions?.length));
+  for (const [i, s] of (note.cautions || []).entries()) bil(`注意事项 ${m.id} #${i + 1}`, s, 8, 8);
+
+  ok(`资料出处：${m.id}`, (note.sources || []).length >= 1, String(note.sources?.length));
+  const diskFiles = matFilesIn(m.dir);
+  for (const [i, s] of (note.sources || []).entries()) {
+    ok(`出处文件名：${m.id} #${i + 1}`, isText(s.file), String(s.file));
+    bil(`出处说明 ${m.id} #${i + 1}`, s.hint, 4, 4);
+    if (diskFiles && !s.file.endsWith("/")) {
+      const leaf = String(s.file).split("/").pop();
+      ok(`出处文件在盘上：${m.id} -> ${s.file}`, diskFiles.has(leaf), leaf);
+    }
+  }
+}
+
+const noteHit = searchAll("0x78");
+ok("搜索能命中笔记正文", (noteHit.materials || []).some(m => m.id === "oled"), JSON.stringify((noteHit.materials || []).map(m => m.id)));
 
 /* ---------------- 输出 ---------------- */
 
